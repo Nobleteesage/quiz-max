@@ -139,7 +139,7 @@ Backend:  http://localhost:5000
 - [ ] Mobile responsive design improvements
 - [ ] Export results to PDF
 
-## Author: Goriola-Obafemi Babatunde
+## Authors: Goriola-Obafemi Babatunde, Owolabani Ayobami, George Meiabiye
 
 **Nobleteesage** — [github.com/Nobleteesage](https://github.com/Nobleteesage)
 

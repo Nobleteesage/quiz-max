@@ -5,6 +5,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const quizRoutes = require('./routes/quizRoutes');
+const authRoutes = require('./routes/authRoutes');
 const { handleSocketEvents } = require('./controllers/socketController');
 
 const app = express();
@@ -23,6 +24,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/quiz', quizRoutes);
+app.use('/api/auth', authRoutes);
 
 // Health check
 app.get('/', (req, res) => {

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import api from '../utils/api'
+import { isLoggedIn, clearToken } from '../utils/auth'
 
 function CreateQuiz() {
   const navigate = useNavigate()
@@ -25,6 +26,21 @@ function CreateQuiz() {
 
   const [questions, setQuestions] = useState([])
 
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      navigate('/login')
+    }
+  }, [navigate])
+
+  const handleAuthError = (err) => {
+    if (err.response?.status === 401) {
+      clearToken()
+      navigate('/login')
+      return true
+    }
+    return false
+  }
+
   const createQuiz = async () => {
     if (!quizForm.title) {
       setError('Please enter a quiz title')
@@ -33,11 +49,13 @@ function CreateQuiz() {
     setLoading(true)
     setError('')
     try {
-      const res = await axios.post('/api/quiz/create', quizForm)
+      const res = await api.post('/quiz/create', quizForm)
       setQuiz(res.data.quiz)
       setStep(2)
     } catch (err) {
-      setError('Failed to create quiz. Is the server running?')
+      if (!handleAuthError(err)) {
+        setError('Failed to create quiz. Is the server running?')
+      }
     }
     setLoading(false)
   }
@@ -54,11 +72,13 @@ function CreateQuiz() {
     setLoading(true)
     setError('')
     try {
-      const res = await axios.post(`/api/quiz/${quiz.id}/question`, questionForm)
+      const res = await api.post(`/quiz/${quiz.id}/question`, questionForm)
       setQuestions([...questions, res.data.question])
       setQuestionForm({ text: '', options: ['', '', '', ''], correctAnswer: 0, points: 10 })
     } catch (err) {
-      setError('Failed to add question')
+      if (!handleAuthError(err)) {
+        setError('Failed to add question')
+      }
     }
     setLoading(false)
   }

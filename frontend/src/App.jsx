@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
+import Login from './pages/Login'
 import CreateQuiz from './pages/CreateQuiz'
 import HostQuiz from './pages/HostQuiz'
 import JoinQuiz from './pages/JoinQuiz'
@@ -11,6 +12,7 @@ function App() {
     <div className="app">
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/create" element={<CreateQuiz />} />
         <Route path="/host/:quizId" element={<HostQuiz />} />
         <Route path="/join" element={<JoinQuiz />} />

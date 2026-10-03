@@ -1,7 +1,30 @@
 const { v4: uuidv4 } = require('uuid');
-const { quizzes, sessions } = require('../models/quizStore');
+const jwt = require('jsonwebtoken');
+const { quizzes, sessions, saveResults } = require('../models/quizStore');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'change-this-in-production';
 
 const handleSocketEvents = (io) => {
+
+  // Optional auth: if a token is sent with the connection, verify it and
+  // attach the user id to the socket. Participants connect with no token
+  // at all, and that's expected, they simply won't get socket.userId set.
+  io.use((socket, next) => {
+    const token = socket.handshake.auth?.token;
+
+    if (token) {
+      try {
+        const payload = jwt.verify(token, JWT_SECRET);
+        socket.userId = payload.userId;
+      } catch {
+        // Invalid or expired token, treat the connection as unauthenticated
+        // rather than rejecting it, since the same socket may also be
+        // used for the join flow.
+      }
+    }
+
+    next();
+  });
 
   io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
@@ -11,6 +34,11 @@ const handleSocketEvents = (io) => {
       const quiz = quizzes[quizId];
       if (!quiz) {
         socket.emit('error', { message: 'Quiz not found' });
+        return;
+      }
+
+      if (!socket.userId || quiz.hostUserId !== socket.userId) {
+        socket.emit('error', { message: 'Only the quiz host can start a session' });
         return;
       }
 
@@ -156,7 +184,6 @@ const handleSocketEvents = (io) => {
     });
   });
 
-  // HELPER FUNCTIONS
   const sendQuestion = (io, session, quiz) => {
     const question = quiz.questions[session.currentQuestion];
     const timeLimit = quiz.timeLimit;
@@ -199,6 +226,8 @@ const handleSocketEvents = (io) => {
         timeTaken: Math.round((new Date() - new Date(session.startTime)) / 1000) + 's'
       }))
       .sort((a, b) => b.score - a.score);
+
+    saveResults(session.quizId, session.id, results);
 
     io.to(session.id).emit('quiz:finished', { results });
     console.log('Quiz finished for session: ' + session.id);

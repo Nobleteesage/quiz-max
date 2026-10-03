@@ -20,7 +20,7 @@ function JoinQuiz() {
     setLoading(true)
     setError('')
 
-    socket = io('http://localhost:5000')
+    socket = io(`http://${window.location.hostname}:5000`)
 
     socket.on('connect', () => {
       socket.emit('participant:join', {

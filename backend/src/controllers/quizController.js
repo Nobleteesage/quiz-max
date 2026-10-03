@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-const { quizzes } = require('../models/quizStore');
+const { quizzes, saveQuiz, removeQuiz } = require('../models/quizStore');
 
 // Create a new quiz
 const createQuiz = (req, res) => {
@@ -21,8 +21,11 @@ const createQuiz = (req, res) => {
     joinCode,
     questions: [],
     createdAt: new Date().toISOString(),
-    status: 'waiting'
+    status: 'waiting',
+    hostUserId: req.user.userId
   };
+
+  saveQuiz(quizzes[quizId]);
 
   res.status(201).json({
     message: 'Quiz created successfully',
@@ -57,6 +60,10 @@ const addQuestion = (req, res) => {
     return res.status(404).json({ error: 'Quiz not found' });
   }
 
+  if (quizzes[quizId].hostUserId !== req.user.userId) {
+    return res.status(403).json({ error: 'Only the quiz host can add questions' });
+  }
+
   if (!text || !options || correctAnswer === undefined) {
     return res.status(400).json({ error: 'Question text, options and correctAnswer are required' });
   }
@@ -74,6 +81,7 @@ const addQuestion = (req, res) => {
   };
 
   quizzes[quizId].questions.push(question);
+  saveQuiz(quizzes[quizId]);
 
   res.status(201).json({
     message: 'Question added successfully',
@@ -89,7 +97,12 @@ const deleteQuiz = (req, res) => {
     return res.status(404).json({ error: 'Quiz not found' });
   }
 
+  if (quizzes[quizId].hostUserId !== req.user.userId) {
+    return res.status(403).json({ error: 'Only the quiz host can delete this quiz' });
+  }
+
   delete quizzes[quizId];
+  removeQuiz(quizId);
   res.json({ message: 'Quiz deleted successfully' });
 };
 

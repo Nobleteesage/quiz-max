@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
+import { getToken } from '../utils/auth'
 
 let socket
 
@@ -14,7 +15,9 @@ function HostQuiz() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    socket = io('http://localhost:5000')
+    socket = io(`http://${window.location.hostname}:5000`, {
+      auth: { token: getToken() }
+    })
 
     socket.on('connect', () => {
       setStatus('connected')

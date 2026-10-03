@@ -4,3 +4,11 @@ node_modules/
 dist/
 build/
 *.log
+
+# SQLite database files, never commit real data
+backend/*.db
+backend/*.db-shm
+backend/*.db-wal
+
+# Backup files from manual edits
+*.bak

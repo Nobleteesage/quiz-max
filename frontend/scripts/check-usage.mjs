@@ -14,11 +14,20 @@ function sourceFiles(dir) {
   })
 }
 
+// Comments often contain example text names, so they are removed before scanning
+function withoutComments(code) {
+  return code
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('//'))
+    .join('\n')
+}
+
 let problems = 0
 let used = 0
 
 for (const file of sourceFiles(src)) {
-  const code = readFileSync(file, 'utf8')
+  const code = withoutComments(readFileSync(file, 'utf8'))
 
   for (const match of code.matchAll(/\b(tn?)\(\s*'([\w.]+)'/g)) {
     const key = match[1] === 'tn' ? match[2] + '.other' : match[2]

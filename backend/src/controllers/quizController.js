@@ -69,13 +69,14 @@ const addQuestion = (req, res) => {
     return res.status(400).json({ error: parsed.error.issues[0].message });
   }
 
-  const { text, options, correctAnswer, points } = parsed.data;
+  const { text, options, correctAnswer, points, type } = parsed.data;
 
   const question = {
     id: uuidv4(),
     text,
     options,
     correctAnswer,
+    type: type || 'multiple_choice',
     points: points || 10
   };
 

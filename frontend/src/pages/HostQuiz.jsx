@@ -1,3 +1,4 @@
+import { SERVER_URL } from '../utils/config'
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
@@ -15,7 +16,7 @@ function HostQuiz() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    socket = io(`http://${window.location.hostname}:5000`, {
+    socket = io(SERVER_URL, {
       auth: { token: getToken() }
     })
 

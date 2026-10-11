@@ -51,13 +51,13 @@ function JoinQuiz() {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       padding: '20px'
     }}>
       <div style={{
         background: '#1a1a2e',
         borderRadius: '16px',
-        padding: '40px',
+        padding: 'clamp(20px, 6vw, 40px)',
         width: '100%',
         maxWidth: '400px'
       }}>

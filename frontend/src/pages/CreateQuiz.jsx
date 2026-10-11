@@ -98,7 +98,7 @@ function CreateQuiz() {
   const cardStyle = {
     background: '#1a1a2e',
     borderRadius: '16px',
-    padding: '30px',
+    padding: 'clamp(18px, 5vw, 30px)',
     marginBottom: '20px'
   }
 

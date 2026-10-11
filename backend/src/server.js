@@ -12,15 +12,21 @@ const { handleSocketEvents } = require('./controllers/socketController');
 const app = express();
 const server = http.createServer(app);
 
+// In development, allow any origin so phones on the local network can connect.
+// In production, only the origins listed in CLIENT_URL (comma separated) are allowed.
+const corsOrigin = process.env.NODE_ENV === 'production'
+  ? (process.env.CLIENT_URL || 'http://localhost:3000').split(',')
+  : true;
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: corsOrigin,
     methods: ['GET', 'POST']
   }
 });
 
 // Middleware
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:3000' }));
+app.use(cors({ origin: corsOrigin }));
 app.use(express.json());
 
 // Rate limiting: general cap on all API routes, tighter cap on auth

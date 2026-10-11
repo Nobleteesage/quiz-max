@@ -12,7 +12,7 @@ function Results() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '100vh'
+        minHeight: '100dvh'
       }}>
         <p style={{ color: '#aaa' }}>No results found.</p>
         <button

@@ -71,12 +71,12 @@ function QuizRoom() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '100vh'
+        minHeight: '100dvh'
       }}>
         <div style={{
           background: '#1a1a2e',
           borderRadius: '16px',
-          padding: '40px',
+          padding: 'clamp(20px, 6vw, 40px)',
           textAlign: 'center',
           maxWidth: '400px',
           width: '100%'
@@ -157,7 +157,7 @@ function QuizRoom() {
         <div style={{
           background: '#1a1a2e',
           borderRadius: '16px',
-          padding: '30px',
+          padding: 'clamp(18px, 5vw, 30px)',
           marginBottom: '20px'
         }}>
           <p style={{ color: '#aaa', fontSize: '12px', marginBottom: '10px' }}>

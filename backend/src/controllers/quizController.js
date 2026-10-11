@@ -43,12 +43,16 @@ const getQuiz = (req, res) => {
     return res.status(404).json({ error: 'Quiz not found' });
   }
 
+  if (quiz.hostUserId !== req.user.userId) {
+    return res.status(403).json({ error: 'Only the quiz host can view this quiz' });
+  }
+
   res.json({ quiz });
 };
 
 // Get all quizzes
 const getAllQuizzes = (req, res) => {
-  const allQuizzes = Object.values(quizzes);
+  const allQuizzes = Object.values(quizzes).filter((q) => q.hostUserId === req.user.userId);
   res.json({ quizzes: allQuizzes });
 };
 

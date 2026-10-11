@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../utils/api'
 import { isLoggedIn, clearToken } from '../utils/auth'
+import { downloadCsv } from '../utils/download'
 
 // SQLite stores timestamps as UTC without a timezone marker
 const formatDate = (value) =>
@@ -95,6 +96,7 @@ function History() {
 
                 {isOpen && (
                   <div style={{ padding: '10px 4px 0' }}>
+                    <button onClick={() => downloadCsv(session.sessionId)} style={{ background: '#6c63ff', color: 'white', padding: '8px 16px', fontSize: '13px', marginBottom: '8px' }}>Download CSV</button>
                     {session.results.map((p, i) => (
                       <div
                         key={i}

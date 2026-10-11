@@ -9,12 +9,14 @@ const {
   deleteQuiz
 } = require('../controllers/quizController');
 const { getHistory } = require('../controllers/historyController');
+const { exportSession } = require('../controllers/exportController');
 
 // Quiz CRUD
 router.post('/create', requireAuth, createQuiz);
-router.get('/all', getAllQuizzes);
+router.get('/all', requireAuth, getAllQuizzes);
 router.get('/history', requireAuth, getHistory);
-router.get('/:quizId', getQuiz);
+router.get('/history/:sessionId/csv', requireAuth, exportSession);
+router.get('/:quizId', requireAuth, getQuiz);
 router.post('/:quizId/question', requireAuth, addQuestion);
 router.delete('/:quizId', requireAuth, deleteQuiz);
 

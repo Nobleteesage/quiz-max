@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import api from '../utils/api'
 import { isLoggedIn, clearToken } from '../utils/auth'
 import { downloadCsv } from '../utils/download'
-
-// SQLite stores timestamps as UTC without a timezone marker
-const formatDate = (value) =>
-  new Date(value.replace(' ', 'T') + 'Z').toLocaleString()
+import { useLanguage } from '../i18n/LanguageContext'
+import { formatDate, formatDuration } from '../i18n/format.mjs'
 
 function History() {
   const navigate = useNavigate()
+  const { lang, t, tn } = useLanguage()
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -28,11 +27,16 @@ function History() {
           clearToken()
           navigate('/login')
         } else {
-          setError('Could not load results. Is the server running?')
+          setError('load')
         }
       })
       .finally(() => setLoading(false))
   }, [navigate])
+
+  const download = async (sessionId) => {
+    const ok = await downloadCsv(sessionId, lang)
+    if (!ok) alert(t('history.downloadError'))
+  }
 
   const cardStyle = {
     background: '#1a1a2e',
@@ -42,25 +46,21 @@ function History() {
   }
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '40px 20px' }}>
-      <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>Past Results</h2>
-      <p style={{ color: '#555', marginBottom: '30px' }}>
-        Every finished session of the quizzes you created
-      </p>
+    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '64px 20px 40px' }}>
+      <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>{t('history.title')}</h2>
+      <p style={{ color: '#555', marginBottom: '30px' }}>{t('history.subtitle')}</p>
 
       {error && (
         <div style={{ background: '#ff475720', border: '1px solid #ff4757', borderRadius: '8px', padding: '12px', marginBottom: '20px', color: '#ff4757' }}>
-          {error}
+          {t('history.error')}
         </div>
       )}
 
-      {loading && <p style={{ color: '#aaa' }}>Loading...</p>}
+      {loading && <p style={{ color: '#aaa' }}>{t('history.loading')}</p>}
 
       {!loading && !error && history.length === 0 && (
         <div style={cardStyle}>
-          <p style={{ color: '#aaa' }}>
-            No finished quizzes yet. Host a quiz and let it run to the end, and the results will show up here.
-          </p>
+          <p style={{ color: '#aaa' }}>{t('history.empty')}</p>
         </div>
       )}
 
@@ -68,7 +68,7 @@ function History() {
         <div key={quiz.quizId} style={cardStyle}>
           <h3 style={{ marginBottom: '4px' }}>{quiz.title}</h3>
           <p style={{ color: '#555', fontSize: '13px', marginBottom: '16px' }}>
-            {quiz.questionCount} questions, played {quiz.sessions.length} time{quiz.sessions.length === 1 ? '' : 's'}
+            {tn('history.questions', quiz.questionCount)}, {tn('history.played', quiz.sessions.length)}
           </p>
 
           {quiz.sessions.map((session) => {
@@ -87,16 +87,23 @@ function History() {
                     fontWeight: '500'
                   }}
                 >
-                  <div>{formatDate(session.playedAt)}</div>
+                  <div>{formatDate(lang, session.playedAt)}</div>
                   <div style={{ color: '#aaa', fontSize: '13px', marginTop: '4px' }}>
-                    {session.participantCount} player{session.participantCount === 1 ? '' : 's'}
-                    {session.topName ? `, winner ${session.topName} with ${session.topScore} pts` : ''}
+                    {tn('history.players', session.participantCount)}
+                    {session.topName
+                      ? ', ' + t('history.winner', { name: session.topName, points: tn('quiz.points', session.topScore) })
+                      : ''}
                   </div>
                 </button>
 
                 {isOpen && (
                   <div style={{ padding: '10px 4px 0' }}>
-                    <button onClick={() => downloadCsv(session.sessionId)} style={{ background: '#6c63ff', color: 'white', padding: '8px 16px', fontSize: '13px', marginBottom: '8px' }}>Download CSV</button>
+                    <button
+                      onClick={() => download(session.sessionId)}
+                      style={{ background: '#6c63ff', color: 'white', padding: '8px 16px', fontSize: '13px', marginBottom: '8px' }}
+                    >
+                      {t('history.download')}
+                    </button>
                     {session.results.map((p, i) => (
                       <div
                         key={i}
@@ -111,7 +118,7 @@ function History() {
                       >
                         <span>{i + 1}. {p.name}</span>
                         <span style={{ color: '#6c63ff', fontWeight: '700' }}>
-                          {p.score} pts <span style={{ color: '#555', fontWeight: '400' }}>({p.timeTaken})</span>
+                          {t('quiz.scoreShort', { score: p.score })} <span style={{ color: '#555', fontWeight: '400' }}>({formatDuration(t, p.timeTaken)})</span>
                         </span>
                       </div>
                     ))}
@@ -127,7 +134,7 @@ function History() {
         onClick={() => navigate('/')}
         style={{ background: 'transparent', color: '#555', width: '100%', padding: '12px' }}
       >
-        Back to Home
+        {t('common.backHome')}
       </button>
     </div>
   )

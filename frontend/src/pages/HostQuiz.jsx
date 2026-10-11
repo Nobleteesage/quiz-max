@@ -1,14 +1,17 @@
-import { SERVER_URL } from '../utils/config'
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import { getToken } from '../utils/auth'
+import { SERVER_URL } from '../utils/config'
+import { useLanguage } from '../i18n/LanguageContext'
+import { serverError } from '../i18n/serverErrors'
 
 let socket
 
 function HostQuiz() {
   const { quizId } = useParams()
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [session, setSession] = useState(null)
   const [participants, setParticipants] = useState([])
   const [status, setStatus] = useState('connecting')
@@ -44,7 +47,7 @@ function HostQuiz() {
     })
 
     socket.on('error', ({ message }) => {
-      setError(message)
+      setError(serverError(t, message))
     })
 
     return () => {
@@ -71,8 +74,8 @@ function HostQuiz() {
   }
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '40px 20px' }}>
-      <h2 style={{ marginBottom: '30px', fontSize: '1.8rem' }}>Host Dashboard</h2>
+    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '64px 20px 40px' }}>
+      <h2 style={{ marginBottom: '30px', fontSize: '1.8rem' }}>{t('host.title')}</h2>
 
       {error && (
         <div style={{ background: '#ff475720', border: '1px solid #ff4757', borderRadius: '8px', padding: '12px', marginBottom: '20px', color: '#ff4757' }}>
@@ -82,25 +85,25 @@ function HostQuiz() {
 
       {status === 'connecting' && (
         <div style={cardStyle}>
-          <p style={{ color: '#aaa' }}>Connecting to server...</p>
+          <p style={{ color: '#aaa' }}>{t('host.connecting')}</p>
         </div>
       )}
 
       {(status === 'waiting' || status === 'active') && session && (
         <>
           <div style={{ ...cardStyle, borderLeft: '4px solid #6c63ff' }}>
-            <p style={{ color: '#aaa', fontSize: '14px' }}>Quiz</p>
+            <p style={{ color: '#aaa', fontSize: '14px' }}>{t('host.quiz')}</p>
             <p style={{ fontSize: '1.3rem', fontWeight: '700' }}>{session.quiz.title}</p>
-            <p style={{ color: '#aaa', marginTop: '10px', fontSize: '14px' }}>Join Code</p>
+            <p style={{ color: '#aaa', marginTop: '10px', fontSize: '14px' }}>{t('host.joinCode')}</p>
             <p style={{ fontSize: '2.5rem', fontWeight: '800', color: '#6c63ff', letterSpacing: '8px' }}>
               {joinCode}
             </p>
-            <p style={{ color: '#555', fontSize: '12px' }}>Share this code with participants</p>
+            <p style={{ color: '#555', fontSize: '12px' }}>{t('host.shareCode')}</p>
           </div>
 
           <div style={cardStyle}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3>Participants ({participants.length})</h3>
+              <h3>{t('host.participants', { count: participants.length })}</h3>
               <span style={{
                 background: status === 'active' ? '#2ecc7120' : '#6c63ff20',
                 color: status === 'active' ? '#2ecc71' : '#6c63ff',
@@ -109,12 +112,12 @@ function HostQuiz() {
                 fontSize: '12px',
                 fontWeight: '600'
               }}>
-                {status === 'active' ? 'LIVE' : 'WAITING'}
+                {status === 'active' ? t('host.live') : t('host.waiting')}
               </span>
             </div>
 
             {participants.length === 0 ? (
-              <p style={{ color: '#555', fontStyle: 'italic' }}>Waiting for participants to join...</p>
+              <p style={{ color: '#555', fontStyle: 'italic' }}>{t('host.noParticipants')}</p>
             ) : (
               participants.map((p, i) => (
                 <div key={p.id} style={{
@@ -126,7 +129,7 @@ function HostQuiz() {
                   marginBottom: '8px'
                 }}>
                   <span>{i + 1}. {p.name}</span>
-                  <span style={{ color: '#6c63ff', fontWeight: '700' }}>{p.score} pts</span>
+                  <span style={{ color: '#6c63ff', fontWeight: '700' }}>{t('quiz.scoreShort', { score: p.score })}</span>
                 </div>
               ))
             )}
@@ -146,7 +149,7 @@ function HostQuiz() {
                 fontSize: '18px'
               }}
             >
-              {participants.length === 0 ? 'Waiting for participants...' : 'Start Quiz!'}
+              {participants.length === 0 ? t('host.waitingButton') : t('host.start')}
             </button>
           )}
 
@@ -161,7 +164,7 @@ function HostQuiz() {
                 fontSize: '18px'
               }}
             >
-              Next Question
+              {t('host.next')}
             </button>
           )}
         </>

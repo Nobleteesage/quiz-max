@@ -1,8 +1,11 @@
 import api from './api'
 
-export async function downloadCsv(sessionId) {
+export async function downloadCsv(sessionId, lang) {
   try {
-    const res = await api.get(`/quiz/history/${sessionId}/csv`, { responseType: 'blob' })
+    const res = await api.get(`/quiz/history/${sessionId}/csv`, {
+      params: { lang },
+      responseType: 'blob'
+    })
     const url = window.URL.createObjectURL(res.data)
     const link = document.createElement('a')
     link.href = url
@@ -11,7 +14,8 @@ export async function downloadCsv(sessionId) {
     link.click()
     link.remove()
     window.URL.revokeObjectURL(url)
+    return true
   } catch {
-    alert('Could not download the results. Please log in again and retry.')
+    return false
   }
 }

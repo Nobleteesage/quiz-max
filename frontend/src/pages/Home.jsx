@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom'
+import { useLanguage } from '../i18n/LanguageContext'
 
 function Home() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
 
   return (
     <div style={{
@@ -23,8 +25,8 @@ function Home() {
         Quiz MAX
       </h1>
 
-      <p style={{ color: '#888', fontSize: '1.1rem', marginBottom: '50px' }}>
-        Create and host interactive quizzes in real time
+      <p style={{ color: '#888', fontSize: '1.1rem', marginBottom: '50px', textAlign: 'center' }}>
+        {t('home.tagline')}
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', maxWidth: '360px' }}>
@@ -32,26 +34,26 @@ function Home() {
           onClick={() => navigate('/create')}
           style={{ background: 'linear-gradient(135deg, #6c63ff, #5a52d5)', color: 'white', padding: '16px', fontSize: '18px' }}
         >
-          Create a Quiz
+          {t('home.create')}
         </button>
 
         <button
           onClick={() => navigate('/join')}
           style={{ background: 'linear-gradient(135deg, #ff6584, #ff4757)', color: 'white', padding: '16px', fontSize: '18px' }}
         >
-          Join a Quiz
+          {t('home.join')}
         </button>
 
         <button
           onClick={() => navigate('/history')}
           style={{ background: 'transparent', border: '2px solid #333', color: '#aaa', padding: '14px', fontSize: '16px' }}
         >
-          Past Results
+          {t('home.history')}
         </button>
       </div>
 
       <p style={{ marginTop: '40px', color: '#555', fontSize: '0.9rem' }}>
-        Built for MAX Messenger
+        {t('home.footer')}
       </p>
     </div>
   )

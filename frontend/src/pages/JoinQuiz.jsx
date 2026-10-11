@@ -1,3 +1,4 @@
+import { SERVER_URL } from '../utils/config'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
@@ -20,7 +21,7 @@ function JoinQuiz() {
     setLoading(true)
     setError('')
 
-    socket = io(`http://${window.location.hostname}:5000`)
+    socket = io(SERVER_URL)
 
     socket.on('connect', () => {
       socket.emit('participant:join', {

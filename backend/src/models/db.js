@@ -2,8 +2,15 @@ const Database = require('better-sqlite3');
 const fs = require('fs');
 const path = require('path');
 
-const dbFile = process.env.NODE_ENV === 'test' ? 'quizmax.test.db' : 'quizmax.db';
-const dbPath = path.join(__dirname, '../../', dbFile);
+let dbPath;
+if (process.env.NODE_ENV === 'test') {
+  dbPath = path.join(__dirname, '../../quizmax.test.db');
+} else if (process.env.DB_PATH) {
+  dbPath = process.env.DB_PATH;
+} else {
+  dbPath = path.join(__dirname, '../../quizmax.db');
+}
+
 const db = new Database(dbPath);
 
 db.pragma('journal_mode = WAL');

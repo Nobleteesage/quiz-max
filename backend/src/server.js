@@ -1,9 +1,16 @@
 const express = require('express');
 const http = require('http');
+const path = require('path');
+const fs = require('fs');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  console.error('JWT_SECRET is not set. Refusing to start in production without it.');
+  process.exit(1);
+}
 
 const quizRoutes = require('./routes/quizRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -54,9 +61,21 @@ app.use('/api/quiz', quizRoutes);
 app.use('/api/auth', authRoutes);
 
 // Health check
-app.get('/', (req, res) => {
+const health = (req, res) => {
   res.json({ message: 'Quiz MAX Server is running!', status: 'ok' });
-});
+};
+app.get('/health', health);
+
+// Serve the built frontend when it exists (Docker and production)
+const distPath = process.env.FRONTEND_DIST || path.join(__dirname, '../../frontend/dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get(/^\/(?!api|socket\.io).*/, (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+} else {
+  app.get('/', health);
+}
 
 // Socket.io
 handleSocketEvents(io);

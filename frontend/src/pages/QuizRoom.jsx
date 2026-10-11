@@ -175,11 +175,10 @@ function QuizRoom() {
             let border = '2px solid transparent'
 
             if (answered && result) {
-              const isCorrect = i === question.options.indexOf(option) && result.isCorrect && i === question.options.findIndex((_, idx) => idx === i)
-              if (result.isCorrect && answered) {
-                bg = i === question.correctAnswer ? '#2ecc7120' : '#1a1a2e'
-                border = i === question.correctAnswer ? '2px solid #2ecc71' : '2px solid transparent'
-              } else {
+              if (i === result.correctAnswer) {
+                bg = '#2ecc7120'
+                border = '2px solid #2ecc71'
+              } else if (i === result.answerIndex) {
                 bg = '#ff475720'
                 border = '2px solid #ff4757'
               }
@@ -199,7 +198,7 @@ function QuizRoom() {
                   fontSize: '16px',
                   borderRadius: '12px',
                   transition: 'all 0.2s',
-                  opacity: answered ? 0.8 : 1
+                  opacity: answered ? 0.9 : 1
                 }}
               >
                 <span style={{

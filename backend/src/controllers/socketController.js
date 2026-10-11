@@ -146,7 +146,9 @@ const handleSocketEvents = (io) => {
       socket.emit('answer:result', {
         isCorrect,
         pointsEarned,
-        currentScore: participant.score
+        currentScore: participant.score,
+        correctAnswer: currentQ.correctAnswer,
+        answerIndex
       });
 
       const allAnswered = Object.values(session.participants).every(

@@ -1,14 +1,15 @@
 const { v4: uuidv4 } = require('uuid');
-const { quizzes } = require('../models/quizStore');
+const { quizzes, saveQuiz, removeQuiz } = require('../models/quizStore');
+const { createQuizSchema, addQuestionSchema } = require('../validators/quizValidators');
 
 // Create a new quiz
 const createQuiz = (req, res) => {
-  const { title, description, timeLimit, penaltyPoints } = req.body;
-
-  if (!title) {
-    return res.status(400).json({ error: 'Quiz title is required' });
+  const parsed = createQuizSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message });
   }
 
+  const { title, description, timeLimit, penaltyPoints } = parsed.data;
   const quizId = uuidv4();
   const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -21,8 +22,11 @@ const createQuiz = (req, res) => {
     joinCode,
     questions: [],
     createdAt: new Date().toISOString(),
-    status: 'waiting'
+    status: 'waiting',
+    hostUserId: req.user.userId
   };
+
+  saveQuiz(quizzes[quizId]);
 
   res.status(201).json({
     message: 'Quiz created successfully',
@@ -51,29 +55,33 @@ const getAllQuizzes = (req, res) => {
 // Add a question to a quiz
 const addQuestion = (req, res) => {
   const { quizId } = req.params;
-  const { text, options, correctAnswer, points } = req.body;
 
   if (!quizzes[quizId]) {
     return res.status(404).json({ error: 'Quiz not found' });
   }
 
-  if (!text || !options || correctAnswer === undefined) {
-    return res.status(400).json({ error: 'Question text, options and correctAnswer are required' });
+  if (quizzes[quizId].hostUserId !== req.user.userId) {
+    return res.status(403).json({ error: 'Only the quiz host can add questions' });
   }
 
-  if (options.length < 2) {
-    return res.status(400).json({ error: 'At least 2 options are required' });
+  const parsed = addQuestionSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message });
   }
+
+  const { text, options, correctAnswer, points, type } = parsed.data;
 
   const question = {
     id: uuidv4(),
     text,
     options,
     correctAnswer,
+    type: type || 'multiple_choice',
     points: points || 10
   };
 
   quizzes[quizId].questions.push(question);
+  saveQuiz(quizzes[quizId]);
 
   res.status(201).json({
     message: 'Question added successfully',
@@ -89,7 +97,12 @@ const deleteQuiz = (req, res) => {
     return res.status(404).json({ error: 'Quiz not found' });
   }
 
+  if (quizzes[quizId].hostUserId !== req.user.userId) {
+    return res.status(403).json({ error: 'Only the quiz host can delete this quiz' });
+  }
+
   delete quizzes[quizId];
+  removeQuiz(quizId);
   res.json({ message: 'Quiz deleted successfully' });
 };
 

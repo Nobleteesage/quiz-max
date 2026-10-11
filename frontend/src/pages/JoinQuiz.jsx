@@ -20,7 +20,7 @@ function JoinQuiz() {
     setLoading(true)
     setError('')
 
-    socket = io('http://localhost:5000')
+    socket = io(`http://${window.location.hostname}:5000`)
 
     socket.on('connect', () => {
       socket.emit('participant:join', {
@@ -51,13 +51,13 @@ function JoinQuiz() {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       padding: '20px'
     }}>
       <div style={{
         background: '#1a1a2e',
         borderRadius: '16px',
-        padding: '40px',
+        padding: 'clamp(20px, 6vw, 40px)',
         width: '100%',
         maxWidth: '400px'
       }}>

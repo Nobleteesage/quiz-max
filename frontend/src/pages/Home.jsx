@@ -9,7 +9,7 @@ function Home() {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       padding: '20px'
     }}>
       <h1 style={{
@@ -40,6 +40,13 @@ function Home() {
           style={{ background: 'linear-gradient(135deg, #ff6584, #ff4757)', color: 'white', padding: '16px', fontSize: '18px' }}
         >
           Join a Quiz
+        </button>
+
+        <button
+          onClick={() => navigate('/history')}
+          style={{ background: 'transparent', border: '2px solid #333', color: '#aaa', padding: '14px', fontSize: '16px' }}
+        >
+          Past Results
         </button>
       </div>
 

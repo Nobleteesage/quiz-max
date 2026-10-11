@@ -40,3 +40,50 @@ input {
 input:focus {
   border-color: #6c63ff;
 }
+
+/* Mobile and touch improvements */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+
+button,
+input {
+  touch-action: manipulation;
+}
+
+button {
+  min-height: 44px;
+}
+
+h1,
+h2,
+h3,
+p {
+  overflow-wrap: anywhere;
+}
+
+/* The lift on hover feels broken on touch screens, so only keep it where a mouse exists */
+@media (hover: none) {
+  button:hover {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Used by the waiting dots in QuizRoom. I did not see this defined in index.css */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

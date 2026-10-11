@@ -12,7 +12,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check:i18n": "node scripts/check-translations.mjs",
+    "check:i18n": "node scripts/check-translations.mjs && node scripts/check-usage.mjs",
     "test": "node --test scripts/plural.test.mjs"
   },
   "dependencies": {

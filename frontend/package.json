@@ -2,10 +2,11 @@
   "name": "quiz-max-frontend",
   "version": "1.0.0",
   "description": "Quiz MAX - Frontend React Application",
-  "author": "Goriola-Obafemi Babatunde",
+  "author": "Goriola-Obafemi Babatunde Sukanmi",
   "contributors": [
+    "George Mieabiye David",
     "Owolabani Ayobami",
-    "George Miebiye"
+    "Adeyemi Olayinka"
   ],
   "private": true,
   "scripts": {
@@ -25,5 +26,6 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^6.1.2",
     "vite": "^8.3.4"
-  }
+  },
+  "license": "MIT"
 }

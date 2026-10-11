@@ -17,10 +17,11 @@
   ],
   "author": "Goriola-Obafemi Babatunde Sukanmi",
   "contributors": [
+    "George Mieabiye David",
     "Owolabani Ayobami",
-    "George Mieabiye"
+    "Adeyemi Olayinka"
   ],
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.11.1",

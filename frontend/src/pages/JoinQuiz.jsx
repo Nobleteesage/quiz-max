@@ -1,12 +1,15 @@
-import { SERVER_URL } from '../utils/config'
 import { useState } from 'react'
+import { SERVER_URL } from '../utils/config'
 import { useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
+import { useLanguage } from '../i18n/LanguageContext'
+import { serverError } from '../i18n/serverErrors'
 
 let socket
 
 function JoinQuiz() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [joinCode, setJoinCode] = useState('')
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
@@ -14,7 +17,7 @@ function JoinQuiz() {
 
   const joinQuiz = () => {
     if (!joinCode || !name) {
-      setError('Please enter both your name and the join code')
+      setError(t('join.errorMissing'))
       return
     }
 
@@ -40,7 +43,7 @@ function JoinQuiz() {
     })
 
     socket.on('error', ({ message }) => {
-      setError(message)
+      setError(serverError(t, message))
       setLoading(false)
       socket.disconnect()
     })
@@ -62,8 +65,8 @@ function JoinQuiz() {
         width: '100%',
         maxWidth: '400px'
       }}>
-        <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>Join a Quiz</h2>
-        <p style={{ color: '#555', marginBottom: '30px' }}>Enter the code from your host</p>
+        <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>{t('join.title')}</h2>
+        <p style={{ color: '#555', marginBottom: '30px' }}>{t('join.subtitle')}</p>
 
         {error && (
           <div style={{
@@ -79,17 +82,17 @@ function JoinQuiz() {
         )}
 
         <label style={{ display: 'block', marginBottom: '6px', color: '#aaa', fontSize: '14px' }}>
-          Your Name
+          {t('join.nameLabel')}
         </label>
         <input
           style={{ marginBottom: '16px' }}
-          placeholder="e.g. John"
+          placeholder={t('join.namePlaceholder')}
           value={name}
           onChange={e => setName(e.target.value)}
         />
 
         <label style={{ display: 'block', marginBottom: '6px', color: '#aaa', fontSize: '14px' }}>
-          Join Code
+          {t('join.codeLabel')}
         </label>
         <input
           style={{ marginBottom: '24px', textTransform: 'uppercase', letterSpacing: '4px', fontSize: '20px', fontWeight: '700' }}
@@ -110,7 +113,7 @@ function JoinQuiz() {
             fontSize: '18px'
           }}
         >
-          {loading ? 'Joining...' : 'Join Quiz'}
+          {loading ? t('join.submitting') : t('join.submit')}
         </button>
 
         <button
@@ -123,7 +126,7 @@ function JoinQuiz() {
             marginTop: '10px'
           }}
         >
-          Back to Home
+          {t('common.backHome')}
         </button>
       </div>
     </div>

@@ -1,7 +1,51 @@
 {
+  "common.backHome": "На главную",
+
   "home.tagline": "Создавайте и проводите интерактивные викторины в реальном времени",
   "home.create": "Создать викторину",
   "home.join": "Присоединиться к викторине",
   "home.history": "Прошлые результаты",
-  "home.footer": "Создано для мессенджера MAX"
+  "home.footer": "Создано для мессенджера MAX",
+
+  "join.title": "Присоединиться к викторине",
+  "join.subtitle": "Введите код, который дал ведущий",
+  "join.errorMissing": "Введите своё имя и код викторины",
+  "join.nameLabel": "Ваше имя",
+  "join.namePlaceholder": "например, Иван",
+  "join.codeLabel": "Код викторины",
+  "join.submit": "Войти в викторину",
+  "join.submitting": "Подключение...",
+
+  "room.inTitle": "Вы в игре!",
+  "room.welcome": "Добро пожаловать,",
+  "room.waiting": "Ожидаем, пока ведущий начнёт викторину...",
+
+  "quiz.questionOf": "Вопрос {current} из {total}",
+  "quiz.scoreShort": "{score} очк.",
+  "quiz.timeLeft": "Осталось времени",
+  "quiz.secondsShort": "{count} с",
+  "quiz.points.one": "{count} очко",
+  "quiz.points.few": "{count} очка",
+  "quiz.points.many": "{count} очков",
+  "quiz.points.other": "{count} очка",
+  "quiz.correct": "Верно!",
+  "quiz.wrong": "Неверно!",
+  "quiz.waitingNext": "Ожидаем следующий вопрос...",
+
+  "results.noResults": "Результаты не найдены.",
+  "results.goHome": "На главную",
+  "results.title": "Викторина завершена!",
+  "results.subtitle": "Итоговая таблица лидеров",
+  "results.you": "ВЫ",
+  "results.time": "Время: {time}",
+  "results.pointsLabel.one": "очко",
+  "results.pointsLabel.few": "очка",
+  "results.pointsLabel.many": "очков",
+  "results.pointsLabel.other": "очка",
+
+  "error.invalidJoin": "Неверный код или викторина уже началась",
+  "error.quizNotFound": "Викторина не найдена",
+  "error.noQuestions": "В викторине нет вопросов",
+  "error.unauthorized": "Нет доступа или сессия не найдена",
+  "error.notHost": "Только ведущий викторины может начать сессию"
 }

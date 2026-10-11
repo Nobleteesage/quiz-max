@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
+import { useLanguage } from '../i18n/LanguageContext'
 
 function QuizRoom() {
   const { sessionId } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
+  const { t, tn } = useLanguage()
   const { name, quizTitle } = location.state || {}
 
   const [question, setQuestion] = useState(null)
@@ -82,11 +84,13 @@ function QuizRoom() {
           width: '100%'
         }}>
           <div style={{ fontSize: '3rem', marginBottom: '20px' }}>🎮</div>
-          <h2 style={{ marginBottom: '10px' }}>You're in!</h2>
-          <p style={{ color: '#aaa', marginBottom: '8px' }}>Welcome, <strong style={{ color: 'white' }}>{name}</strong></p>
+          <h2 style={{ marginBottom: '10px' }}>{t('room.inTitle')}</h2>
+          <p style={{ color: '#aaa', marginBottom: '8px' }}>
+            {t('room.welcome')} <strong style={{ color: 'white' }}>{name}</strong>
+          </p>
           <p style={{ color: '#6c63ff', fontWeight: '600' }}>{quizTitle}</p>
           <p style={{ color: '#555', marginTop: '20px', fontSize: '14px' }}>
-            Waiting for the host to start the quiz...
+            {t('room.waiting')}
           </p>
           <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
             {[0, 1, 2].map(i => (
@@ -104,6 +108,8 @@ function QuizRoom() {
     )
   }
 
+  const pointsSign = result ? (result.pointsEarned > 0 ? '+' : result.pointsEarned < 0 ? '-' : '') : ''
+
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
       {/* Header */}
@@ -114,7 +120,7 @@ function QuizRoom() {
         marginBottom: '20px'
       }}>
         <span style={{ color: '#aaa', fontSize: '14px' }}>
-          Question {questionIndex + 1} of {totalQuestions}
+          {t('quiz.questionOf', { current: questionIndex + 1, total: totalQuestions })}
         </span>
         <span style={{
           background: '#1a1a2e',
@@ -123,7 +129,7 @@ function QuizRoom() {
           fontWeight: '700',
           color: '#6c63ff'
         }}>
-          {score} pts
+          {t('quiz.scoreShort', { score })}
         </span>
       </div>
 
@@ -137,7 +143,7 @@ function QuizRoom() {
         alignItems: 'center',
         gap: '12px'
       }}>
-        <span style={{ color: '#aaa', fontSize: '14px' }}>Time left</span>
+        <span style={{ color: '#aaa', fontSize: '14px' }}>{t('quiz.timeLeft')}</span>
         <div style={{ flex: 1, background: '#0f0f1a', borderRadius: '8px', height: '8px' }}>
           <div style={{
             width: `${(timeLeft / (question?.timeLimit || 1)) * 100}%`,
@@ -148,7 +154,7 @@ function QuizRoom() {
           }} />
         </div>
         <span style={{ color: timerColor, fontWeight: '700', fontSize: '18px', minWidth: '32px' }}>
-          {timeLeft}s
+          {t('quiz.secondsShort', { count: timeLeft })}
         </span>
       </div>
 
@@ -161,7 +167,7 @@ function QuizRoom() {
           marginBottom: '20px'
         }}>
           <p style={{ color: '#aaa', fontSize: '12px', marginBottom: '10px' }}>
-            {question.points} points
+            {tn('quiz.points', question.points)}
           </p>
           <h2 style={{ fontSize: '1.4rem', lineHeight: '1.5' }}>{question.text}</h2>
         </div>
@@ -233,13 +239,13 @@ function QuizRoom() {
           textAlign: 'center'
         }}>
           <p style={{ fontSize: '1.2rem', fontWeight: '700', color: result.isCorrect ? '#2ecc71' : '#ff4757' }}>
-            {result.isCorrect ? 'Correct!' : 'Wrong!'}
+            {result.isCorrect ? t('quiz.correct') : t('quiz.wrong')}
           </p>
           <p style={{ color: '#aaa', marginTop: '4px' }}>
-            {result.pointsEarned >= 0 ? '+' : ''}{result.pointsEarned} points
+            {pointsSign}{tn('quiz.points', Math.abs(result.pointsEarned))}
           </p>
           <p style={{ color: '#555', fontSize: '13px', marginTop: '4px' }}>
-            Waiting for next question...
+            {t('quiz.waitingNext')}
           </p>
         </div>
       )}

@@ -6,6 +6,7 @@ import HostQuiz from './pages/HostQuiz'
 import JoinQuiz from './pages/JoinQuiz'
 import QuizRoom from './pages/QuizRoom'
 import Results from './pages/Results'
+import History from './pages/History'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/join" element={<JoinQuiz />} />
         <Route path="/room/:sessionId" element={<QuizRoom />} />
         <Route path="/results" element={<Results />} />
+        <Route path="/history" element={<History />} />
       </Routes>
     </div>
   )

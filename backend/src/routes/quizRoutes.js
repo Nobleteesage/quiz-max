@@ -8,10 +8,12 @@ const {
   getAllQuizzes,
   deleteQuiz
 } = require('../controllers/quizController');
+const { getHistory } = require('../controllers/historyController');
 
 // Quiz CRUD
 router.post('/create', requireAuth, createQuiz);
 router.get('/all', getAllQuizzes);
+router.get('/history', requireAuth, getHistory);
 router.get('/:quizId', getQuiz);
 router.post('/:quizId/question', requireAuth, addQuestion);
 router.delete('/:quizId', requireAuth, deleteQuiz);

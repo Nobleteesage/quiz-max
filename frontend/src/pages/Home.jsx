@@ -41,6 +41,13 @@ function Home() {
         >
           Join a Quiz
         </button>
+
+        <button
+          onClick={() => navigate('/history')}
+          style={{ background: 'transparent', border: '2px solid #333', color: '#aaa', padding: '14px', fontSize: '16px' }}
+        >
+          Past Results
+        </button>
       </div>
 
       <p style={{ marginTop: '40px', color: '#555', fontSize: '0.9rem' }}>

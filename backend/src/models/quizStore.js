@@ -1,7 +1,7 @@
 const db = require('./db');
 
 // In-memory objects, kept for live reads exactly like before.
-// quizzes is now hydrated from the database on startup and kept
+// quizzes is hydrated from the database on startup and kept
 // in sync on every write. sessions stays purely in-memory since
 // it holds live socket connections and timers.
 const quizzes = {};
@@ -33,6 +33,16 @@ function saveResults(quizId, sessionId, results) {
   ).run(quizId, sessionId, JSON.stringify(results));
 }
 
+function getResultsForQuiz(quizId) {
+  return db.prepare(
+    'SELECT session_id, data, created_at FROM results WHERE quiz_id = ? ORDER BY id DESC'
+  ).all(quizId).map((row) => ({
+    sessionId: row.session_id,
+    createdAt: row.created_at,
+    results: JSON.parse(row.data)
+  }));
+}
+
 loadQuizzesFromDb();
 
-module.exports = { quizzes, sessions, saveQuiz, removeQuiz, saveResults };
+module.exports = { quizzes, sessions, saveQuiz, removeQuiz, saveResults, getResultsForQuiz };

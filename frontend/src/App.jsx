@@ -10,16 +10,19 @@ import QuizRoom from './pages/QuizRoom'
 import Results from './pages/Results'
 import History from './pages/History'
 
-// Pages that show the EN and RU buttons. A page is added here once it is translated.
-const SWITCHER_PATHS = ['/', '/join', '/results', '/login', '/create']
+// Pages that show the EN and RU buttons. The quiz room is left out on purpose,
+// because the buttons would sit on top of the score during a question.
+const SWITCHER_PATHS = ['/', '/join', '/results', '/login', '/create', '/history']
 
 function App() {
   const location = useLocation()
+  const showSwitcher =
+    SWITCHER_PATHS.includes(location.pathname) || location.pathname.startsWith('/host/')
 
   return (
     <LanguageProvider>
       <div className="app">
-        {SWITCHER_PATHS.includes(location.pathname) && <LanguageSwitcher />}
+        {showSwitcher && <LanguageSwitcher />}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />

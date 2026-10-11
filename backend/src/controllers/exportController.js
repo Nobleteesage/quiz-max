@@ -1,6 +1,11 @@
 const { quizzes } = require('../models/quizStore');
 const { getResultBySession } = require('../models/resultsStore');
 
+const HEADERS = {
+  en: ['Place', 'Name', 'Score', 'Time taken'],
+  ru: ['Место', 'Имя', 'Очки', 'Затраченное время']
+};
+
 // Quote a text cell. Names that start with = + - @ would be run as formulas
 // by Excel, so they get a leading apostrophe.
 function csvSafeText(value) {
@@ -9,6 +14,12 @@ function csvSafeText(value) {
     text = "'" + text;
   }
   return '"' + text.replace(/"/g, '""') + '"';
+}
+
+// The server stores times such as "30s". Russian files show "30 с".
+function formatTaken(value, lang) {
+  const text = String(value === undefined || value === null ? '' : value);
+  return lang === 'ru' ? text.replace(/(\d+)s$/, '$1 с') : text;
 }
 
 const exportSession = (req, res) => {
@@ -22,9 +33,11 @@ const exportSession = (req, res) => {
     return res.status(403).json({ error: 'Only the quiz host can export these results' });
   }
 
-  const lines = [['Place', 'Name', 'Score', 'Time taken'].join(';')];
+  const lang = req.query.lang === 'ru' ? 'ru' : 'en';
+
+  const lines = [HEADERS[lang].join(';')];
   session.results.forEach((p, i) => {
-    lines.push([i + 1, csvSafeText(p.name), p.score, csvSafeText(p.timeTaken)].join(';'));
+    lines.push([i + 1, csvSafeText(p.name), p.score, csvSafeText(formatTaken(p.timeTaken, lang))].join(';'));
   });
 
   // The first character is a marker that makes Excel read the file as UTF-8
@@ -36,4 +49,4 @@ const exportSession = (req, res) => {
   res.send(body);
 };
 
-module.exports = { exportSession, csvSafeText };
+module.exports = { exportSession, csvSafeText, formatTaken, HEADERS };

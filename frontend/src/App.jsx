@@ -11,7 +11,7 @@ import Results from './pages/Results'
 import History from './pages/History'
 
 // Pages that show the EN and RU buttons. A page is added here once it is translated.
-const SWITCHER_PATHS = ['/']
+const SWITCHER_PATHS = ['/', '/join', '/results']
 
 function App() {
   const location = useLocation()

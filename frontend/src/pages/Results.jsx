@@ -1,9 +1,17 @@
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useLanguage } from '../i18n/LanguageContext'
 
 function Results() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { t, tn } = useLanguage()
   const { results, myName } = location.state || {}
+
+  // The server sends times like "30s". Show them with the unit of the chosen language.
+  const formatTime = (value) => {
+    const seconds = parseInt(value, 10)
+    return Number.isNaN(seconds) ? value : t('quiz.secondsShort', { count: seconds })
+  }
 
   if (!results) {
     return (
@@ -14,12 +22,12 @@ function Results() {
         justifyContent: 'center',
         minHeight: '100dvh'
       }}>
-        <p style={{ color: '#aaa' }}>No results found.</p>
+        <p style={{ color: '#aaa' }}>{t('results.noResults')}</p>
         <button
           onClick={() => navigate('/')}
           style={{ marginTop: '20px', background: '#6c63ff', color: 'white' }}
         >
-          Go Home
+          {t('results.goHome')}
         </button>
       </div>
     )
@@ -38,9 +46,9 @@ function Results() {
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent'
         }}>
-          Quiz Finished!
+          {t('results.title')}
         </h1>
-        <p style={{ color: '#555', marginTop: '8px' }}>Final Leaderboard</p>
+        <p style={{ color: '#555', marginTop: '8px' }}>{t('results.subtitle')}</p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '40px' }}>
@@ -75,12 +83,12 @@ function Results() {
                       borderRadius: '10px',
                       fontWeight: '600'
                     }}>
-                      YOU
+                      {t('results.you')}
                     </span>
                   )}
                 </div>
                 <p style={{ color: '#555', fontSize: '13px', marginTop: '2px' }}>
-                  Time: {participant.timeTaken}
+                  {t('results.time', { time: formatTime(participant.timeTaken) })}
                 </p>
               </div>
 
@@ -92,7 +100,7 @@ function Results() {
                 }}>
                   {participant.score}
                 </p>
-                <p style={{ color: '#555', fontSize: '12px' }}>points</p>
+                <p style={{ color: '#555', fontSize: '12px' }}>{tn('results.pointsLabel', participant.score)}</p>
               </div>
             </div>
           )
@@ -109,7 +117,7 @@ function Results() {
           fontSize: '18px'
         }}
       >
-        Back to Home
+        {t('common.backHome')}
       </button>
     </div>
   )

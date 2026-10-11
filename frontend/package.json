@@ -12,7 +12,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check:i18n": "node scripts/check-translations.mjs"
+    "check:i18n": "node scripts/check-translations.mjs",
+    "test": "node --test scripts/plural.test.mjs"
   },
   "dependencies": {
     "axios": "^1.6.0",

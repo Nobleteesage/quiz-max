@@ -1,7 +1,47 @@
 {
+  "common.backHome": "Back to Home",
+
   "home.tagline": "Create and host interactive quizzes in real time",
   "home.create": "Create a Quiz",
   "home.join": "Join a Quiz",
   "home.history": "Past Results",
-  "home.footer": "Built for MAX Messenger"
+  "home.footer": "Built for MAX Messenger",
+
+  "join.title": "Join a Quiz",
+  "join.subtitle": "Enter the code from your host",
+  "join.errorMissing": "Please enter both your name and the join code",
+  "join.nameLabel": "Your Name",
+  "join.namePlaceholder": "e.g. John",
+  "join.codeLabel": "Join Code",
+  "join.submit": "Join Quiz",
+  "join.submitting": "Joining...",
+
+  "room.inTitle": "You're in!",
+  "room.welcome": "Welcome,",
+  "room.waiting": "Waiting for the host to start the quiz...",
+
+  "quiz.questionOf": "Question {current} of {total}",
+  "quiz.scoreShort": "{score} pts",
+  "quiz.timeLeft": "Time left",
+  "quiz.secondsShort": "{count}s",
+  "quiz.points.one": "{count} point",
+  "quiz.points.other": "{count} points",
+  "quiz.correct": "Correct!",
+  "quiz.wrong": "Wrong!",
+  "quiz.waitingNext": "Waiting for next question...",
+
+  "results.noResults": "No results found.",
+  "results.goHome": "Go Home",
+  "results.title": "Quiz Finished!",
+  "results.subtitle": "Final Leaderboard",
+  "results.you": "YOU",
+  "results.time": "Time: {time}",
+  "results.pointsLabel.one": "point",
+  "results.pointsLabel.other": "points",
+
+  "error.invalidJoin": "Invalid join code or quiz already started",
+  "error.quizNotFound": "Quiz not found",
+  "error.noQuestions": "Quiz has no questions",
+  "error.unauthorized": "Unauthorized or session not found",
+  "error.notHost": "Only the quiz host can start a session"
 }

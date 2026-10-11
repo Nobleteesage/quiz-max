@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import en from './en.json'
 import ru from './ru.json'
+import { pluralCategory } from './plural.mjs'
 
 const dictionaries = { en, ru }
 const STORAGE_KEY = 'quizmax_lang'
@@ -14,6 +15,12 @@ function readSavedLanguage() {
     // Browser storage can be blocked, so fall back to the default
   }
   return DEFAULT_LANGUAGE
+}
+
+function fill(text, params) {
+  return text.replace(/\{(\w+)\}/g, (match, name) =>
+    params[name] !== undefined ? params[name] : match
+  )
 }
 
 const LanguageContext = createContext(null)
@@ -38,13 +45,22 @@ export function LanguageProvider({ children }) {
   // t('some.key') returns the text. t('some.key', { name: 'Tee' }) fills {name} in the text.
   const t = useCallback((key, params = {}) => {
     const text = dictionaries[lang][key] ?? dictionaries.en[key] ?? key
-    return text.replace(/\{(\w+)\}/g, (match, name) =>
-      params[name] !== undefined ? params[name] : match
-    )
+    return fill(text, params)
+  }, [lang])
+
+  // tn('some.key', 5) picks the right form for the number, for example .one, .few, .many or .other
+  const tn = useCallback((key, count, params = {}) => {
+    const form = pluralCategory(lang, count)
+    const text =
+      dictionaries[lang][key + '.' + form] ??
+      dictionaries[lang][key + '.other'] ??
+      dictionaries.en[key + '.other'] ??
+      key
+    return fill(text, { count, ...params })
   }, [lang])
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t }}>
+    <LanguageContext.Provider value={{ lang, setLang, t, tn }}>
       {children}
     </LanguageContext.Provider>
   )

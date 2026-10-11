@@ -2,9 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { setToken } from '../utils/auth'
+import { useLanguage } from '../i18n/LanguageContext'
+import { serverError } from '../i18n/serverErrors'
 
 function Login() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [mode, setMode] = useState('login')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -14,13 +17,13 @@ function Login() {
   const containerStyle = {
     maxWidth: '400px',
     margin: '0 auto',
-    padding: '40px 20px'
+    padding: '64px 20px 40px'
   }
 
   const cardStyle = {
     background: '#1a1a2e',
     borderRadius: '16px',
-    padding: '30px'
+    padding: 'clamp(18px, 5vw, 30px)'
   }
 
   const labelStyle = {
@@ -36,7 +39,7 @@ function Login() {
 
   const submit = async () => {
     if (!username || !password) {
-      setError('Please enter a username and password')
+      setError(t('login.errorMissing'))
       return
     }
     setLoading(true)
@@ -47,7 +50,7 @@ function Login() {
       setToken(res.data.token)
       navigate('/create')
     } catch (err) {
-      setError(err.response?.data?.error || 'Something went wrong')
+      setError(serverError(t, err.response?.data?.error) || t('login.errorGeneric'))
     }
     setLoading(false)
   }
@@ -55,7 +58,7 @@ function Login() {
   return (
     <div style={containerStyle}>
       <h2 style={{ marginBottom: '30px', fontSize: '1.8rem' }}>
-        {mode === 'login' ? 'Host Login' : 'Create Host Account'}
+        {mode === 'login' ? t('login.titleLogin') : t('login.titleRegister')}
       </h2>
 
       {error && (
@@ -65,14 +68,14 @@ function Login() {
       )}
 
       <div style={cardStyle}>
-        <label style={labelStyle}>Username</label>
+        <label style={labelStyle}>{t('login.username')}</label>
         <input
           style={inputStyle}
           value={username}
           onChange={e => setUsername(e.target.value)}
         />
 
-        <label style={labelStyle}>Password</label>
+        <label style={labelStyle}>{t('login.password')}</label>
         <input
           style={inputStyle}
           type="password"
@@ -85,16 +88,16 @@ function Login() {
           disabled={loading}
           style={{ background: 'linear-gradient(135deg, #6c63ff, #5a52d5)', color: 'white', width: '100%', padding: '14px', marginBottom: '12px' }}
         >
-          {loading ? 'Please wait...' : mode === 'login' ? 'Log In' : 'Register'}
+          {loading ? t('login.wait') : mode === 'login' ? t('login.submitLogin') : t('login.submitRegister')}
         </button>
 
         <p style={{ color: '#aaa', fontSize: '14px', textAlign: 'center' }}>
-          {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+          {mode === 'login' ? t('login.noAccount') : t('login.haveAccount')}{' '}
           <span
             style={{ color: '#6c63ff', cursor: 'pointer' }}
             onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
           >
-            {mode === 'login' ? 'Register' : 'Log In'}
+            {mode === 'login' ? t('login.switchToRegister') : t('login.switchToLogin')}
           </span>
         </p>
       </div>

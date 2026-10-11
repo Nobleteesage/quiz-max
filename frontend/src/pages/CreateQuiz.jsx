@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../utils/api'
 import { isLoggedIn, clearToken } from '../utils/auth'
+import { useLanguage } from '../i18n/LanguageContext'
+import { serverError } from '../i18n/serverErrors'
 
 const emptyMultipleChoice = {
   type: 'multiple_choice',
@@ -14,13 +16,14 @@ const emptyMultipleChoice = {
 const emptyTrueFalse = {
   type: 'true_false',
   text: '',
-  options: ['True', 'False'],
+  options: ['', ''],
   correctAnswer: 0,
   points: 10
 }
 
 function CreateQuiz() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [step, setStep] = useState(1)
   const [quiz, setQuiz] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -35,6 +38,8 @@ function CreateQuiz() {
 
   const [questionForm, setQuestionForm] = useState(emptyMultipleChoice)
   const [questions, setQuestions] = useState([])
+
+  const isTrueFalse = questionForm.type === 'true_false'
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -59,7 +64,7 @@ function CreateQuiz() {
 
   const createQuiz = async () => {
     if (!quizForm.title) {
-      setError('Please enter a quiz title')
+      setError(t('create.errorTitle'))
       return
     }
     setLoading(true)
@@ -70,7 +75,7 @@ function CreateQuiz() {
       setStep(2)
     } catch (err) {
       if (!handleAuthError(err)) {
-        setError('Failed to create quiz. Is the server running?')
+        setError(serverError(t, err.response?.data?.error) || t('create.errorCreate'))
       }
     }
     setLoading(false)
@@ -78,22 +83,25 @@ function CreateQuiz() {
 
   const addQuestion = async () => {
     if (!questionForm.text) {
-      setError('Please enter a question')
+      setError(t('create.errorQuestionText'))
       return
     }
-    if (questionForm.options.some(o => !o)) {
-      setError('Please fill in all answer options')
+    if (!isTrueFalse && questionForm.options.some(o => !o)) {
+      setError(t('create.errorOptions'))
       return
     }
     setLoading(true)
     setError('')
     try {
-      const res = await api.post(`/quiz/${quiz.id}/question`, questionForm)
+      const payload = isTrueFalse
+        ? { ...questionForm, options: [t('create.true'), t('create.false')] }
+        : questionForm
+      const res = await api.post(`/quiz/${quiz.id}/question`, payload)
       setQuestions([...questions, res.data.question])
-      setQuestionForm(questionForm.type === 'true_false' ? emptyTrueFalse : emptyMultipleChoice)
+      setQuestionForm(isTrueFalse ? emptyTrueFalse : emptyMultipleChoice)
     } catch (err) {
       if (!handleAuthError(err)) {
-        setError(err.response?.data?.error || 'Failed to add question')
+        setError(serverError(t, err.response?.data?.error) || t('create.errorAddQuestion'))
       }
     }
     setLoading(false)
@@ -108,7 +116,7 @@ function CreateQuiz() {
   const containerStyle = {
     maxWidth: '600px',
     margin: '0 auto',
-    padding: '40px 20px'
+    padding: '64px 20px 40px'
   }
 
   const cardStyle = {
@@ -139,7 +147,7 @@ function CreateQuiz() {
   return (
     <div style={containerStyle}>
       <h2 style={{ marginBottom: '30px', fontSize: '1.8rem' }}>
-        {step === 1 ? 'Create a New Quiz' : 'Add Questions'}
+        {step === 1 ? t('create.titleNew') : t('create.titleQuestions')}
       </h2>
 
       {error && (
@@ -150,23 +158,23 @@ function CreateQuiz() {
 
       {step === 1 && (
         <div style={cardStyle}>
-          <label style={labelStyle}>Quiz Title *</label>
+          <label style={labelStyle}>{t('create.quizTitleLabel')}</label>
           <input
             style={inputStyle}
-            placeholder="e.g. General Knowledge Quiz"
+            placeholder={t('create.quizTitlePlaceholder')}
             value={quizForm.title}
             onChange={e => setQuizForm({ ...quizForm, title: e.target.value })}
           />
 
-          <label style={labelStyle}>Description</label>
+          <label style={labelStyle}>{t('create.descriptionLabel')}</label>
           <input
             style={inputStyle}
-            placeholder="Optional description"
+            placeholder={t('create.descriptionPlaceholder')}
             value={quizForm.description}
             onChange={e => setQuizForm({ ...quizForm, description: e.target.value })}
           />
 
-          <label style={labelStyle}>Time per Question (seconds)</label>
+          <label style={labelStyle}>{t('create.timeLabel')}</label>
           <input
             style={inputStyle}
             type="number"
@@ -176,7 +184,7 @@ function CreateQuiz() {
             onChange={e => setQuizForm({ ...quizForm, timeLimit: parseInt(e.target.value) })}
           />
 
-          <label style={labelStyle}>Penalty Points for Wrong Answer</label>
+          <label style={labelStyle}>{t('create.penaltyLabel')}</label>
           <input
             style={inputStyle}
             type="number"
@@ -190,7 +198,7 @@ function CreateQuiz() {
             disabled={loading}
             style={{ background: 'linear-gradient(135deg, #6c63ff, #5a52d5)', color: 'white', width: '100%', padding: '14px' }}
           >
-            {loading ? 'Creating...' : 'Create Quiz'}
+            {loading ? t('create.submitting') : t('create.submit')}
           </button>
         </div>
       )}
@@ -198,50 +206,52 @@ function CreateQuiz() {
       {step === 2 && quiz && (
         <>
           <div style={{ ...cardStyle, borderLeft: '4px solid #6c63ff' }}>
-            <p style={{ color: '#6c63ff', fontWeight: '700', fontSize: '1.1rem' }}>Quiz Created!</p>
-            <p style={{ color: '#aaa', marginTop: '4px' }}>Join Code: <span style={{ color: 'white', fontWeight: '700', fontSize: '1.4rem' }}>{quiz.joinCode}</span></p>
-            <p style={{ color: '#555', fontSize: '0.85rem', marginTop: '4px' }}>Share this code with participants</p>
+            <p style={{ color: '#6c63ff', fontWeight: '700', fontSize: '1.1rem' }}>{t('create.created')}</p>
+            <p style={{ color: '#aaa', marginTop: '4px' }}>
+              {t('create.joinCode')} <span style={{ color: 'white', fontWeight: '700', fontSize: '1.4rem' }}>{quiz.joinCode}</span>
+            </p>
+            <p style={{ color: '#555', fontSize: '0.85rem', marginTop: '4px' }}>{t('create.shareCode')}</p>
           </div>
 
           <div style={cardStyle}>
-            <h3 style={{ marginBottom: '20px' }}>Add a Question</h3>
+            <h3 style={{ marginBottom: '20px' }}>{t('create.addQuestionTitle')}</h3>
 
-            <label style={labelStyle}>Question Type</label>
+            <label style={labelStyle}>{t('create.typeLabel')}</label>
             <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
               <button
                 onClick={() => switchType('multiple_choice')}
-                style={typeButtonStyle(questionForm.type === 'multiple_choice')}
+                style={typeButtonStyle(!isTrueFalse)}
               >
-                Multiple Choice
+                {t('create.typeMultiple')}
               </button>
               <button
                 onClick={() => switchType('true_false')}
-                style={typeButtonStyle(questionForm.type === 'true_false')}
+                style={typeButtonStyle(isTrueFalse)}
               >
-                True or False
+                {t('create.typeTrueFalse')}
               </button>
             </div>
 
-            <label style={labelStyle}>Question Text *</label>
+            <label style={labelStyle}>{t('create.questionLabel')}</label>
             <input
               style={inputStyle}
-              placeholder={questionForm.type === 'true_false' ? 'e.g. Football is played with 11 players per side' : 'e.g. What is the capital of France?'}
+              placeholder={isTrueFalse ? t('create.questionPlaceholderTrueFalse') : t('create.questionPlaceholderMultiple')}
               value={questionForm.text}
               onChange={e => setQuestionForm({ ...questionForm, text: e.target.value })}
             />
 
             <label style={labelStyle}>
-              {questionForm.type === 'true_false' ? 'Pick the correct answer *' : 'Answer Options *'}
+              {isTrueFalse ? t('create.pickCorrect') : t('create.optionsLabel')}
             </label>
             {questionForm.options.map((opt, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                {questionForm.type === 'true_false' ? (
+                {isTrueFalse ? (
                   <div style={{ flex: 1, padding: '12px 16px', background: '#0f0f1a', borderRadius: '8px', color: 'white' }}>
-                    {opt}
+                    {i === 0 ? t('create.true') : t('create.false')}
                   </div>
                 ) : (
                   <input
-                    placeholder={`Option ${i + 1}`}
+                    placeholder={t('create.optionPlaceholder', { number: i + 1 })}
                     value={opt}
                     onChange={e => updateOption(i, e.target.value)}
                     style={{ flex: 1 }}
@@ -254,11 +264,11 @@ function CreateQuiz() {
                   onChange={() => setQuestionForm({ ...questionForm, correctAnswer: i })}
                   style={{ width: '20px', height: '20px' }}
                 />
-                <span style={{ color: '#aaa', fontSize: '12px' }}>Correct</span>
+                <span style={{ color: '#aaa', fontSize: '12px' }}>{t('create.correct')}</span>
               </div>
             ))}
 
-            <label style={labelStyle}>Points for this Question</label>
+            <label style={labelStyle}>{t('create.pointsLabel')}</label>
             <input
               style={inputStyle}
               type="number"
@@ -272,17 +282,17 @@ function CreateQuiz() {
               disabled={loading}
               style={{ background: '#6c63ff', color: 'white', width: '100%', padding: '14px', marginBottom: '10px' }}
             >
-              {loading ? 'Adding...' : 'Add Question'}
+              {loading ? t('create.adding') : t('create.addQuestion')}
             </button>
           </div>
 
           {questions.length > 0 && (
             <div style={cardStyle}>
-              <h3 style={{ marginBottom: '16px' }}>Questions Added ({questions.length})</h3>
+              <h3 style={{ marginBottom: '16px' }}>{t('create.questionsAdded', { count: questions.length })}</h3>
               {questions.map((q, i) => (
                 <div key={q.id} style={{ padding: '10px', background: '#0f0f1a', borderRadius: '8px', marginBottom: '8px' }}>
                   <p style={{ color: '#aaa', fontSize: '12px' }}>
-                    Q{i + 1} {q.type === 'true_false' ? '(True or False)' : '(Multiple Choice)'}
+                    {t('create.questionNumber', { number: i + 1 })} ({q.type === 'true_false' ? t('create.typeTrueFalse') : t('create.typeMultiple')})
                   </p>
                   <p>{q.text}</p>
                 </div>
@@ -292,7 +302,7 @@ function CreateQuiz() {
                 onClick={() => navigate(`/host/${quiz.id}`)}
                 style={{ background: 'linear-gradient(135deg, #ff6584, #ff4757)', color: 'white', width: '100%', padding: '14px', marginTop: '16px' }}
               >
-                Start Hosting This Quiz
+                {t('create.startHosting')}
               </button>
             </div>
           )}

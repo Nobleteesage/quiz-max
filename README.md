@@ -247,7 +247,7 @@ The host sends the login token in the socket handshake. Participants connect wit
 
 ## Team
 
-Quiz MAX started as an Educational Practice Project in 2026. A team of four built the first working version in under 48 hours, and the lead developer has extended it since.
+Quiz MAX started as an Educational Practice Project in 2026. A team of four built the first working version in under 1month, and the lead developer and his team has extended it since.
 
 ### Goriola-Obafemi Babatunde Sukanmi, Lead Developer
 

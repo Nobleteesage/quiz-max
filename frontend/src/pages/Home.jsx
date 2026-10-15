@@ -38,6 +38,13 @@ function Home() {
         </button>
 
         <button
+          onClick={() => navigate('/my-quizzes')}
+          style={{ background: 'transparent', border: '2px solid #6c63ff', color: 'white', padding: '14px', fontSize: '16px' }}
+        >
+          {t('home.myQuizzes')}
+        </button>
+
+        <button
           onClick={() => navigate('/join')}
           style={{ background: 'linear-gradient(135deg, #ff6584, #ff4757)', color: 'white', padding: '16px', fontSize: '18px' }}
         >

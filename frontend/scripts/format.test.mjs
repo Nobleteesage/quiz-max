@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { formatDuration, formatDate } from '../src/i18n/format.mjs'
+import { formatDuration, formatDate, formatDay } from '../src/i18n/format.mjs'
 
 const fakeT = (key, params) => key + ':' + params.count
 
@@ -19,4 +19,10 @@ test('dates are formatted for both languages', () => {
 
 test('a broken date is returned unchanged', () => {
   assert.equal(formatDate('en', 'not a date'), 'not a date')
+})
+
+test('a quiz creation day is shown for both languages', () => {
+  assert.ok(formatDay('ru', '2026-10-05T10:00:00.000Z').includes('2026'))
+  assert.ok(formatDay('en', '2026-10-05T10:00:00.000Z').includes('2026'))
+  assert.equal(formatDay('en', 'not a date'), 'not a date')
 })

@@ -6,6 +6,7 @@ const {
   getQuiz,
   addQuestion,
   getAllQuizzes,
+  deleteQuestion,
   deleteQuiz
 } = require('../controllers/quizController');
 const { getHistory } = require('../controllers/historyController');
@@ -18,6 +19,7 @@ router.get('/history', requireAuth, getHistory);
 router.get('/history/:sessionId/csv', requireAuth, exportSession);
 router.get('/:quizId', requireAuth, getQuiz);
 router.post('/:quizId/question', requireAuth, addQuestion);
+router.delete('/:quizId/question/:questionId', requireAuth, deleteQuestion);
 router.delete('/:quizId', requireAuth, deleteQuiz);
 
 module.exports = router;

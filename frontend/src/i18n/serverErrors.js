@@ -22,7 +22,10 @@ const KEYS = {
   'A true or false question must have exactly 2 options': 'error.trueFalseOptions',
   'Only the quiz host can add questions': 'error.notHostAdd',
   'Only the quiz host can view this quiz': 'error.notHostView',
-  'Only the quiz host can export these results': 'error.notHostExport'
+  'Only the quiz host can export these results': 'error.notHostExport',
+  'Only the quiz host can delete questions': 'error.notHostDeleteQuestion',
+  'Only the quiz host can delete this quiz': 'error.notHostDelete',
+  'Question not found': 'error.questionNotFound'
 }
 
 export function serverError(t, message) {

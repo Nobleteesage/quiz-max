@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { SERVER_URL } from '../utils/config'
 import { useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import { useLanguage } from '../i18n/LanguageContext'
 import { serverError } from '../i18n/serverErrors'
+import FieldError from '../components/FieldError'
+import { validateJoin, hasErrors } from '../utils/validate.mjs'
+import { focusFirstError, invalidStyle } from '../utils/focusError'
 
 let socket
 
@@ -14,13 +17,25 @@ function JoinQuiz() {
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
+
+  // Once every highlighted field is fixed, the summary at the top goes away too
+  useEffect(() => {
+    if (error === t('common.fixFields') && !hasErrors(fieldErrors)) {
+      setError('')
+    }
+  }, [fieldErrors, error, t])
 
   const joinQuiz = () => {
-    if (!joinCode || !name) {
-      setError(t('join.errorMissing'))
+    const problems = validateJoin({ name, joinCode })
+    if (hasErrors(problems)) {
+      setFieldErrors(problems)
+      setError(t('common.fixFields'))
+      focusFirstError()
       return
     }
 
+    setFieldErrors({})
     setLoading(true)
     setError('')
 
@@ -85,22 +100,32 @@ function JoinQuiz() {
           {t('join.nameLabel')}
         </label>
         <input
-          style={{ marginBottom: '16px' }}
+          style={{ marginBottom: '16px', ...(fieldErrors.name ? invalidStyle : {}) }}
+          aria-invalid={!!fieldErrors.name}
           placeholder={t('join.namePlaceholder')}
           value={name}
-          onChange={e => setName(e.target.value)}
+          onChange={e => {
+            setName(e.target.value)
+            setFieldErrors({ ...fieldErrors, name: '' })
+          }}
         />
+        <FieldError message={fieldErrors.name && t(fieldErrors.name)} />
 
         <label style={{ display: 'block', marginBottom: '6px', color: '#aaa', fontSize: '14px' }}>
           {t('join.codeLabel')}
         </label>
         <input
-          style={{ marginBottom: '24px', textTransform: 'uppercase', letterSpacing: '4px', fontSize: '20px', fontWeight: '700' }}
+          style={{ marginBottom: '24px', textTransform: 'uppercase', letterSpacing: '4px', fontSize: '20px', fontWeight: '700', ...(fieldErrors.joinCode ? invalidStyle : {}) }}
+          aria-invalid={!!fieldErrors.joinCode}
           placeholder="XXXXXX"
           value={joinCode}
-          onChange={e => setJoinCode(e.target.value.toUpperCase())}
+          onChange={e => {
+            setJoinCode(e.target.value.toUpperCase())
+            setFieldErrors({ ...fieldErrors, joinCode: '' })
+          }}
           maxLength={6}
         />
+        <FieldError message={fieldErrors.joinCode && t(fieldErrors.joinCode)} />
 
         <button
           onClick={joinQuiz}

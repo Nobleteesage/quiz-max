@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import api from '../utils/api'
 import { isLoggedIn, clearToken } from '../utils/auth'
 import { useLanguage } from '../i18n/LanguageContext'
 import { serverError } from '../i18n/serverErrors'
+import FieldError from '../components/FieldError'
+import { validateQuizForm, validateQuestionForm, hasErrors } from '../utils/validate.mjs'
+import { focusFirstError, invalidStyle } from '../utils/focusError'
 
+// Number boxes keep their text while the host types, and are turned into numbers when sent
 const emptyMultipleChoice = {
   type: 'multiple_choice',
   text: '',
   options: ['', '', '', ''],
   correctAnswer: 0,
-  points: 10
+  points: '10'
 }
 
 const emptyTrueFalse = {
@@ -18,22 +22,29 @@ const emptyTrueFalse = {
   text: '',
   options: ['', ''],
   correctAnswer: 0,
-  points: 10
+  points: '10'
 }
 
+// This page has two jobs. At /create it makes a new quiz.
+// At /quiz/:quizId/edit it reopens a saved quiz to review it or add more questions.
 function CreateQuiz() {
   const navigate = useNavigate()
+  const { quizId: editId } = useParams()
   const { t } = useLanguage()
-  const [step, setStep] = useState(1)
+  const [step, setStep] = useState(editId ? 0 : 1)
   const [quiz, setQuiz] = useState(null)
+  const [justCreated, setJustCreated] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [quizErrors, setQuizErrors] = useState({})
+  const [questionErrors, setQuestionErrors] = useState({})
 
   const [quizForm, setQuizForm] = useState({
     title: '',
     description: '',
-    timeLimit: 30,
-    penaltyPoints: 0
+    timeLimit: '30',
+    penaltyPoints: '0'
   })
 
   const [questionForm, setQuestionForm] = useState(emptyMultipleChoice)
@@ -41,16 +52,45 @@ function CreateQuiz() {
 
   const isTrueFalse = questionForm.type === 'true_false'
 
+  const goToLogin = () => {
+    clearToken()
+    navigate('/login', { state: { from: editId ? `/quiz/${editId}/edit` : '/create' } })
+  }
+
   useEffect(() => {
     if (!isLoggedIn()) {
-      navigate('/login')
+      navigate('/login', { state: { from: editId ? `/quiz/${editId}/edit` : '/create' } })
+      return
     }
-  }, [navigate])
+    if (!editId) return
+
+    api.get(`/quiz/${editId}`)
+      .then((res) => {
+        setQuiz(res.data.quiz)
+        setQuestions(res.data.quiz.questions)
+        setStep(2)
+      })
+      .catch((err) => {
+        if (err.response?.status === 401) {
+          goToLogin()
+        } else {
+          setError(serverError(t, err.response?.data?.error) || t('create.loadError'))
+          setStep(-1)
+        }
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editId])
+
+  // Once every highlighted field is fixed, the summary at the top goes away too
+  useEffect(() => {
+    if (error === t('common.fixFields') && !hasErrors(quizErrors) && !hasErrors(questionErrors)) {
+      setError('')
+    }
+  }, [quizErrors, questionErrors, error, t])
 
   const handleAuthError = (err) => {
     if (err.response?.status === 401) {
-      clearToken()
-      navigate('/login')
+      goToLogin()
       return true
     }
     return false
@@ -59,19 +99,42 @@ function CreateQuiz() {
   const switchType = (type) => {
     if (type === questionForm.type) return
     setError('')
+    setNotice('')
+    setQuestionErrors({})
     setQuestionForm(type === 'true_false' ? emptyTrueFalse : emptyMultipleChoice)
   }
 
+  const changeQuizField = (field, value) => {
+    setQuizForm({ ...quizForm, [field]: value })
+    setQuizErrors({ ...quizErrors, [field]: '' })
+  }
+
+  const changeQuestionField = (field, value) => {
+    setQuestionForm({ ...questionForm, [field]: value })
+    setQuestionErrors({ ...questionErrors, [field]: '' })
+    setNotice('')
+  }
+
   const createQuiz = async () => {
-    if (!quizForm.title) {
-      setError(t('create.errorTitle'))
+    const problems = validateQuizForm(quizForm)
+    if (hasErrors(problems)) {
+      setQuizErrors(problems)
+      setError(t('common.fixFields'))
+      focusFirstError()
       return
     }
+    setQuizErrors({})
     setLoading(true)
     setError('')
     try {
-      const res = await api.post('/quiz/create', quizForm)
+      const res = await api.post('/quiz/create', {
+        title: quizForm.title.trim(),
+        description: quizForm.description,
+        timeLimit: Number(quizForm.timeLimit),
+        penaltyPoints: Number(quizForm.penaltyPoints)
+      })
       setQuiz(res.data.quiz)
+      setJustCreated(true)
       setStep(2)
     } catch (err) {
       if (!handleAuthError(err)) {
@@ -82,23 +145,31 @@ function CreateQuiz() {
   }
 
   const addQuestion = async () => {
-    if (!questionForm.text) {
-      setError(t('create.errorQuestionText'))
+    const problems = validateQuestionForm(questionForm)
+    if (hasErrors(problems)) {
+      setQuestionErrors(problems)
+      setError(t('common.fixFields'))
+      setNotice('')
+      focusFirstError()
       return
     }
-    if (!isTrueFalse && questionForm.options.some(o => !o)) {
-      setError(t('create.errorOptions'))
-      return
-    }
+    setQuestionErrors({})
     setLoading(true)
     setError('')
+    setNotice('')
     try {
-      const payload = isTrueFalse
-        ? { ...questionForm, options: [t('create.true'), t('create.false')] }
-        : questionForm
+      const payload = {
+        ...questionForm,
+        text: questionForm.text.trim(),
+        points: Number(questionForm.points),
+        options: isTrueFalse
+          ? [t('create.true'), t('create.false')]
+          : questionForm.options.map(o => o.trim())
+      }
       const res = await api.post(`/quiz/${quiz.id}/question`, payload)
       setQuestions([...questions, res.data.question])
       setQuestionForm(isTrueFalse ? emptyTrueFalse : emptyMultipleChoice)
+      setNotice(t('create.questionAdded'))
     } catch (err) {
       if (!handleAuthError(err)) {
         setError(serverError(t, err.response?.data?.error) || t('create.errorAddQuestion'))
@@ -107,10 +178,30 @@ function CreateQuiz() {
     setLoading(false)
   }
 
+  const removeQuestion = async (question) => {
+    if (!window.confirm(t('create.confirmRemove'))) return
+    setError('')
+    setNotice('')
+    try {
+      await api.delete(`/quiz/${quiz.id}/question/${question.id}`)
+      setQuestions(questions.filter(q => q.id !== question.id))
+    } catch (err) {
+      if (!handleAuthError(err)) {
+        setError(serverError(t, err.response?.data?.error) || t('create.removeError'))
+      }
+    }
+  }
+
   const updateOption = (index, value) => {
     const newOptions = [...questionForm.options]
     newOptions[index] = value
     setQuestionForm({ ...questionForm, options: newOptions })
+    if (questionErrors.options) {
+      const newErrors = [...questionErrors.options]
+      newErrors[index] = ''
+      setQuestionErrors({ ...questionErrors, options: newErrors })
+    }
+    setNotice('')
   }
 
   const containerStyle = {
@@ -144,6 +235,8 @@ function CreateQuiz() {
     padding: '12px'
   })
 
+  const inputWithError = (message) => ({ ...inputStyle, ...(message ? invalidStyle : {}) })
+
   return (
     <div style={containerStyle}>
       <h2 style={{ marginBottom: '30px', fontSize: '1.8rem' }}>
@@ -151,54 +244,73 @@ function CreateQuiz() {
       </h2>
 
       {error && (
-        <div style={{ background: '#ff475720', border: '1px solid #ff4757', borderRadius: '8px', padding: '12px', marginBottom: '20px', color: '#ff4757' }}>
+        <div role="alert" style={{ background: '#ff475720', border: '1px solid #ff4757', borderRadius: '8px', padding: '12px', marginBottom: '20px', color: '#ff4757' }}>
           {error}
         </div>
+      )}
+
+      {step === -1 && (
+        <button
+          onClick={() => navigate('/my-quizzes')}
+          style={{ background: 'transparent', border: '2px solid #333', color: '#aaa', width: '100%', padding: '14px' }}
+        >
+          {t('common.myQuizzes')}
+        </button>
       )}
 
       {step === 1 && (
         <div style={cardStyle}>
           <label style={labelStyle}>{t('create.quizTitleLabel')}</label>
           <input
-            style={inputStyle}
+            style={inputWithError(quizErrors.title)}
+            aria-invalid={!!quizErrors.title}
             placeholder={t('create.quizTitlePlaceholder')}
             value={quizForm.title}
-            onChange={e => setQuizForm({ ...quizForm, title: e.target.value })}
+            onChange={e => changeQuizField('title', e.target.value)}
           />
+          <FieldError message={quizErrors.title && t(quizErrors.title)} />
 
           <label style={labelStyle}>{t('create.descriptionLabel')}</label>
           <input
             style={inputStyle}
             placeholder={t('create.descriptionPlaceholder')}
             value={quizForm.description}
-            onChange={e => setQuizForm({ ...quizForm, description: e.target.value })}
+            onChange={e => changeQuizField('description', e.target.value)}
           />
 
           <label style={labelStyle}>{t('create.timeLabel')}</label>
           <input
-            style={inputStyle}
-            type="number"
-            min="5"
-            max="120"
+            style={inputWithError(quizErrors.timeLimit)}
+            aria-invalid={!!quizErrors.timeLimit}
+            inputMode="numeric"
             value={quizForm.timeLimit}
-            onChange={e => setQuizForm({ ...quizForm, timeLimit: parseInt(e.target.value) })}
+            onChange={e => changeQuizField('timeLimit', e.target.value)}
           />
+          <FieldError message={quizErrors.timeLimit && t(quizErrors.timeLimit)} />
 
           <label style={labelStyle}>{t('create.penaltyLabel')}</label>
           <input
-            style={inputStyle}
-            type="number"
-            min="0"
+            style={inputWithError(quizErrors.penaltyPoints)}
+            aria-invalid={!!quizErrors.penaltyPoints}
+            inputMode="numeric"
             value={quizForm.penaltyPoints}
-            onChange={e => setQuizForm({ ...quizForm, penaltyPoints: parseInt(e.target.value) })}
+            onChange={e => changeQuizField('penaltyPoints', e.target.value)}
           />
+          <FieldError message={quizErrors.penaltyPoints && t(quizErrors.penaltyPoints)} />
 
           <button
             onClick={createQuiz}
             disabled={loading}
-            style={{ background: 'linear-gradient(135deg, #6c63ff, #5a52d5)', color: 'white', width: '100%', padding: '14px' }}
+            style={{ background: 'linear-gradient(135deg, #6c63ff, #5a52d5)', color: 'white', width: '100%', padding: '14px', marginBottom: '10px' }}
           >
             {loading ? t('create.submitting') : t('create.submit')}
+          </button>
+
+          <button
+            onClick={() => navigate('/my-quizzes')}
+            style={{ background: 'transparent', color: '#aaa', width: '100%', padding: '12px' }}
+          >
+            {t('common.myQuizzes')}
           </button>
         </div>
       )}
@@ -206,11 +318,14 @@ function CreateQuiz() {
       {step === 2 && quiz && (
         <>
           <div style={{ ...cardStyle, borderLeft: '4px solid #6c63ff' }}>
-            <p style={{ color: '#6c63ff', fontWeight: '700', fontSize: '1.1rem' }}>{t('create.created')}</p>
+            <p style={{ color: '#6c63ff', fontWeight: '700', fontSize: '1.1rem' }}>
+              {justCreated ? t('create.created') : t('create.editing', { title: quiz.title })}
+            </p>
             <p style={{ color: '#aaa', marginTop: '4px' }}>
               {t('create.joinCode')} <span style={{ color: 'white', fontWeight: '700', fontSize: '1.4rem' }}>{quiz.joinCode}</span>
             </p>
             <p style={{ color: '#555', fontSize: '0.85rem', marginTop: '4px' }}>{t('create.shareCode')}</p>
+            <p style={{ color: '#2ecc71', fontSize: '0.85rem', marginTop: '8px' }}>{t('create.autosaved')}</p>
           </div>
 
           <div style={cardStyle}>
@@ -234,48 +349,60 @@ function CreateQuiz() {
 
             <label style={labelStyle}>{t('create.questionLabel')}</label>
             <input
-              style={inputStyle}
+              style={inputWithError(questionErrors.text)}
+              aria-invalid={!!questionErrors.text}
               placeholder={isTrueFalse ? t('create.questionPlaceholderTrueFalse') : t('create.questionPlaceholderMultiple')}
               value={questionForm.text}
-              onChange={e => setQuestionForm({ ...questionForm, text: e.target.value })}
+              onChange={e => changeQuestionField('text', e.target.value)}
             />
+            <FieldError message={questionErrors.text && t(questionErrors.text)} />
 
             <label style={labelStyle}>
               {isTrueFalse ? t('create.pickCorrect') : t('create.optionsLabel')}
             </label>
-            {questionForm.options.map((opt, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                {isTrueFalse ? (
-                  <div style={{ flex: 1, padding: '12px 16px', background: '#0f0f1a', borderRadius: '8px', color: 'white' }}>
-                    {i === 0 ? t('create.true') : t('create.false')}
+            {questionForm.options.map((opt, i) => {
+              const optionError = questionErrors.options?.[i]
+              return (
+                <div key={i} style={{ marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {isTrueFalse ? (
+                      <div style={{ flex: 1, padding: '12px 16px', background: '#0f0f1a', borderRadius: '8px', color: 'white' }}>
+                        {i === 0 ? t('create.true') : t('create.false')}
+                      </div>
+                    ) : (
+                      <input
+                        placeholder={t('create.optionPlaceholder', { number: i + 1 })}
+                        value={opt}
+                        onChange={e => updateOption(i, e.target.value)}
+                        aria-invalid={!!optionError}
+                        style={{ flex: 1, ...(optionError ? invalidStyle : {}) }}
+                      />
+                    )}
+                    <input
+                      type="radio"
+                      name="correct"
+                      checked={questionForm.correctAnswer === i}
+                      onChange={() => setQuestionForm({ ...questionForm, correctAnswer: i })}
+                      style={{ width: '20px', height: '20px' }}
+                    />
+                    <span style={{ color: '#aaa', fontSize: '12px' }}>{t('create.correct')}</span>
                   </div>
-                ) : (
-                  <input
-                    placeholder={t('create.optionPlaceholder', { number: i + 1 })}
-                    value={opt}
-                    onChange={e => updateOption(i, e.target.value)}
-                    style={{ flex: 1 }}
-                  />
-                )}
-                <input
-                  type="radio"
-                  name="correct"
-                  checked={questionForm.correctAnswer === i}
-                  onChange={() => setQuestionForm({ ...questionForm, correctAnswer: i })}
-                  style={{ width: '20px', height: '20px' }}
-                />
-                <span style={{ color: '#aaa', fontSize: '12px' }}>{t('create.correct')}</span>
-              </div>
-            ))}
+                  {optionError && (
+                    <p role="alert" style={{ color: '#ff4757', fontSize: '13px', marginTop: '4px' }}>{t(optionError)}</p>
+                  )}
+                </div>
+              )
+            })}
 
-            <label style={labelStyle}>{t('create.pointsLabel')}</label>
+            <label style={{ ...labelStyle, marginTop: '16px' }}>{t('create.pointsLabel')}</label>
             <input
-              style={inputStyle}
-              type="number"
-              min="1"
+              style={inputWithError(questionErrors.points)}
+              aria-invalid={!!questionErrors.points}
+              inputMode="numeric"
               value={questionForm.points}
-              onChange={e => setQuestionForm({ ...questionForm, points: parseInt(e.target.value) })}
+              onChange={e => changeQuestionField('points', e.target.value)}
             />
+            <FieldError message={questionErrors.points && t(questionErrors.points)} />
 
             <button
               onClick={addQuestion}
@@ -284,28 +411,64 @@ function CreateQuiz() {
             >
               {loading ? t('create.adding') : t('create.addQuestion')}
             </button>
+
+            {notice && (
+              <p role="status" style={{ color: '#2ecc71', fontSize: '14px' }}>{notice}</p>
+            )}
           </div>
 
-          {questions.length > 0 && (
-            <div style={cardStyle}>
-              <h3 style={{ marginBottom: '16px' }}>{t('create.questionsAdded', { count: questions.length })}</h3>
-              {questions.map((q, i) => (
-                <div key={q.id} style={{ padding: '10px', background: '#0f0f1a', borderRadius: '8px', marginBottom: '8px' }}>
+          <div style={cardStyle}>
+            <h3 style={{ marginBottom: '16px' }}>{t('create.questionsAdded', { count: questions.length })}</h3>
+
+            {questions.length === 0 && (
+              <p style={{ color: '#aaa', fontStyle: 'italic', marginBottom: '8px' }}>{t('create.needQuestion')}</p>
+            )}
+
+            {questions.map((q, i) => (
+              <div key={q.id} style={{ padding: '10px', background: '#0f0f1a', borderRadius: '8px', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
                   <p style={{ color: '#aaa', fontSize: '12px' }}>
                     {t('create.questionNumber', { number: i + 1 })} ({q.type === 'true_false' ? t('create.typeTrueFalse') : t('create.typeMultiple')})
                   </p>
-                  <p>{q.text}</p>
+                  <button
+                    onClick={() => removeQuestion(q)}
+                    style={{ background: 'transparent', color: '#ff4757', border: '1px solid #ff4757', padding: '4px 10px', fontSize: '13px', minHeight: '32px' }}
+                  >
+                    {t('create.remove')}
+                  </button>
                 </div>
-              ))}
+                <p style={{ margin: '6px 0' }}>{q.text}</p>
+                {q.options.map((option, optionIndex) => (
+                  <p
+                    key={optionIndex}
+                    style={{
+                      fontSize: '14px',
+                      color: optionIndex === q.correctAnswer ? '#2ecc71' : '#888',
+                      fontWeight: optionIndex === q.correctAnswer ? '700' : '400'
+                    }}
+                  >
+                    {optionIndex === q.correctAnswer ? '✓ ' : ''}{option}
+                  </p>
+                ))}
+              </div>
+            ))}
 
+            {questions.length > 0 && (
               <button
                 onClick={() => navigate(`/host/${quiz.id}`)}
                 style={{ background: 'linear-gradient(135deg, #ff6584, #ff4757)', color: 'white', width: '100%', padding: '14px', marginTop: '16px' }}
               >
                 {t('create.startHosting')}
               </button>
-            </div>
-          )}
+            )}
+
+            <button
+              onClick={() => navigate('/my-quizzes')}
+              style={{ background: 'transparent', border: '2px solid #333', color: '#aaa', width: '100%', padding: '12px', marginTop: '12px' }}
+            >
+              {t('create.saveFinish')}
+            </button>
+          </div>
         </>
       )}
     </div>

@@ -10,3 +10,10 @@ export function formatDate(lang, value) {
   if (Number.isNaN(date.getTime())) return String(value)
   return date.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-GB')
 }
+
+// Quiz creation times are stored as ISO text such as "2026-10-05T10:00:00.000Z". Show only the day.
+export function formatDay(lang, value) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return String(value)
+  return date.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-GB')
+}

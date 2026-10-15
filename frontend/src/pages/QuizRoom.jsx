@@ -176,7 +176,7 @@ function QuizRoom() {
       {/* Answer Options */}
       {question && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {question.options.map((option, i) => {
+          {[...question.options, ...(question.noneOption ? [t('quiz.noneOfTheAbove')] : [])].map((option, i) => {
             let bg = '#1a1a2e'
             let border = '2px solid transparent'
 

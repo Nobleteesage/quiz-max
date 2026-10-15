@@ -166,5 +166,9 @@
   "myQuizzes.loadError": "Could not load your quizzes. Is the server running?",
   "myQuizzes.timeLine": "{time} per question",
   "myQuizzes.created": "created {date}",
-  "myQuizzes.noQuestions": "No questions yet. Press Questions to add some before hosting."
+  "myQuizzes.noQuestions": "No questions yet. Press Questions to add some before hosting.",
+  "quiz.noneOfTheAbove": "None of the above",
+  "create.noneOptionLabel": "Add \"None of the above\" as the last choice",
+  "create.noneOptionHint": "Players who think no answer fits can pick it. Tick Correct next to it if it is the right answer.",
+  "error.trueFalseNone": "A true or false question cannot have a \"None of the above\" choice"
 }

@@ -75,7 +75,7 @@ const addQuestion = (req, res) => {
     return res.status(400).json({ error: parsed.error.issues[0].message });
   }
 
-  const { text, options, correctAnswer, points, type } = parsed.data;
+  const { text, options, correctAnswer, points, type, noneOption } = parsed.data;
 
   const question = {
     id: uuidv4(),
@@ -85,6 +85,9 @@ const addQuestion = (req, res) => {
     type: type || 'multiple_choice',
     points: points || 10
   };
+  if (noneOption) {
+    question.noneOption = true;
+  }
 
   quizzes[quizId].questions.push(question);
   saveQuiz(quizzes[quizId]);

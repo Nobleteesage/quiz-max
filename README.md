@@ -6,6 +6,7 @@ A real time interactive quiz platform built with Node.js, Socket.io and React. H
 
 * Host accounts with login (JWT). Participants join without an account
 * Multiple choice and true or false questions
+* Optional "None of the above" choice on multiple choice questions, for cases where no written answer fits
 * Join quizzes with a unique 6 character code
 * Real time question delivery over WebSockets
 * Countdown timer per question, controlled by the server
@@ -172,7 +173,7 @@ Use the **EN** and **RU** buttons at the top right of each page. They are on eve
 
 1. Open the app and click **My Quizzes** (or **Create a Quiz** to start a new one)
 2. Register an account or log in
-3. Press **New Quiz**, fill in the quiz details and add multiple choice or true or false questions. Every change is saved automatically, and the form tells you which field is missing
+3. Press **New Quiz**, fill in the quiz details and add multiple choice or true or false questions (tick **None of the above** on a multiple choice question to add that last choice, and mark it Correct when no written option is right). Every change is saved automatically, and the form tells you which field is missing
 4. Find all your quizzes under **My Quizzes**. Press **Questions** to review a quiz, add more questions or remove one, and **Delete** to remove a whole quiz
 5. Press **Host** on any saved quiz and share the 6 character join code
 6. Click **Start Quiz** when participants have joined

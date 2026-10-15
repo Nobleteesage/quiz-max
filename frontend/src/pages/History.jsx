@@ -16,7 +16,7 @@ function History() {
 
   useEffect(() => {
     if (!isLoggedIn()) {
-      navigate('/login')
+      navigate('/login', { state: { from: '/history' } })
       return
     }
 
@@ -25,7 +25,7 @@ function History() {
       .catch((err) => {
         if (err.response?.status === 401) {
           clearToken()
-          navigate('/login')
+          navigate('/login', { state: { from: '/history' } })
         } else {
           setError('load')
         }

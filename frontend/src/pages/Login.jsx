@@ -1,18 +1,31 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import axios from 'axios'
 import { setToken } from '../utils/auth'
 import { useLanguage } from '../i18n/LanguageContext'
 import { serverError } from '../i18n/serverErrors'
+import FieldError from '../components/FieldError'
+import { validateLogin, hasErrors } from '../utils/validate.mjs'
+import { focusFirstError, invalidStyle } from '../utils/focusError'
 
 function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { t } = useLanguage()
+  const goAfterLogin = location.state?.from || '/my-quizzes'
   const [mode, setMode] = useState('login')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
   const [loading, setLoading] = useState(false)
+
+  // Once every highlighted field is fixed, the summary at the top goes away too
+  useEffect(() => {
+    if (error === t('common.fixFields') && !hasErrors(fieldErrors)) {
+      setError('')
+    }
+  }, [fieldErrors, error, t])
 
   const containerStyle = {
     maxWidth: '400px',
@@ -38,17 +51,21 @@ function Login() {
   }
 
   const submit = async () => {
-    if (!username || !password) {
-      setError(t('login.errorMissing'))
+    const problems = validateLogin({ username, password })
+    if (hasErrors(problems)) {
+      setFieldErrors(problems)
+      setError(t('common.fixFields'))
+      focusFirstError()
       return
     }
+    setFieldErrors({})
     setLoading(true)
     setError('')
     try {
       const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register'
       const res = await axios.post(endpoint, { username, password })
       setToken(res.data.token)
-      navigate('/create')
+      navigate(goAfterLogin)
     } catch (err) {
       setError(serverError(t, err.response?.data?.error) || t('login.errorGeneric'))
     }
@@ -70,18 +87,28 @@ function Login() {
       <div style={cardStyle}>
         <label style={labelStyle}>{t('login.username')}</label>
         <input
-          style={inputStyle}
+          style={{ ...inputStyle, ...(fieldErrors.username ? invalidStyle : {}) }}
+          aria-invalid={!!fieldErrors.username}
           value={username}
-          onChange={e => setUsername(e.target.value)}
+          onChange={e => {
+            setUsername(e.target.value)
+            setFieldErrors({ ...fieldErrors, username: '' })
+          }}
         />
+        <FieldError message={fieldErrors.username && t(fieldErrors.username)} />
 
         <label style={labelStyle}>{t('login.password')}</label>
         <input
-          style={inputStyle}
+          style={{ ...inputStyle, ...(fieldErrors.password ? invalidStyle : {}) }}
+          aria-invalid={!!fieldErrors.password}
           type="password"
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={e => {
+            setPassword(e.target.value)
+            setFieldErrors({ ...fieldErrors, password: '' })
+          }}
         />
+        <FieldError message={fieldErrors.password && t(fieldErrors.password)} />
 
         <button
           onClick={submit}

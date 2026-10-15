@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken');
 const { quizzes, sessions, saveResults } = require('../models/quizStore');
+const { closeWaitingSessionsOfQuiz, closeWaitingSessionsOfHost } = require('../models/sessionCleanup');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'change-this-in-production';
 
@@ -41,6 +42,9 @@ const handleSocketEvents = (io) => {
         socket.emit('error', { message: 'Only the quiz host can start a session' });
         return;
       }
+
+      // Close older waiting sessions of this quiz, so the join code always reaches the newest one
+      closeWaitingSessionsOfQuiz(sessions, quizId);
 
       const sessionId = uuidv4();
       sessions[sessionId] = {
@@ -174,6 +178,9 @@ const handleSocketEvents = (io) => {
     // DISCONNECT
     socket.on('disconnect', () => {
       console.log('User disconnected: ' + socket.id);
+
+      // A host who leaves before pressing Start takes the waiting room with them
+      closeWaitingSessionsOfHost(sessions, socket.id);
 
       for (const session of Object.values(sessions)) {
         if (session.participants[socket.id]) {

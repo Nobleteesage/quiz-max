@@ -50,9 +50,11 @@ const getQuiz = (req, res) => {
   res.json({ quiz });
 };
 
-// Get all quizzes
+// Get all quizzes of the logged in host, newest first
 const getAllQuizzes = (req, res) => {
-  const allQuizzes = Object.values(quizzes).filter((q) => q.hostUserId === req.user.userId);
+  const allQuizzes = Object.values(quizzes)
+    .filter((q) => q.hostUserId === req.user.userId)
+    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   res.json({ quizzes: allQuizzes });
 };
 
@@ -93,6 +95,29 @@ const addQuestion = (req, res) => {
   });
 };
 
+// Remove one question from a quiz
+const deleteQuestion = (req, res) => {
+  const { quizId, questionId } = req.params;
+  const quiz = quizzes[quizId];
+
+  if (!quiz) {
+    return res.status(404).json({ error: 'Quiz not found' });
+  }
+
+  if (quiz.hostUserId !== req.user.userId) {
+    return res.status(403).json({ error: 'Only the quiz host can delete questions' });
+  }
+
+  const index = quiz.questions.findIndex((q) => q.id === questionId);
+  if (index === -1) {
+    return res.status(404).json({ error: 'Question not found' });
+  }
+
+  quiz.questions.splice(index, 1);
+  saveQuiz(quiz);
+  res.json({ message: 'Question deleted successfully' });
+};
+
 // Delete a quiz
 const deleteQuiz = (req, res) => {
   const { quizId } = req.params;
@@ -110,4 +135,4 @@ const deleteQuiz = (req, res) => {
   res.json({ message: 'Quiz deleted successfully' });
 };
 
-module.exports = { createQuiz, getQuiz, addQuestion, getAllQuizzes, deleteQuiz };
+module.exports = { createQuiz, getQuiz, addQuestion, getAllQuizzes, deleteQuestion, deleteQuiz };

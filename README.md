@@ -12,7 +12,9 @@ A real time interactive quiz platform built with Node.js, Socket.io and React. H
 * Points for correct answers and optional penalty points for wrong answers
 * After each answer the participant sees the correct option and their own choice
 * Live participant list on the host dashboard and a final leaderboard
+* My Quizzes page: every quiz a host creates is saved, and can be hosted again, reviewed, extended or deleted
 * Past Results page for hosts, with every finished session of their quizzes
+* Clear messages under each field when something is missing or wrong, in English and Russian
 * CSV export of each finished session, ready to open in Excel
 * English and Russian interface, with a switch on every page except the live question screen, and correct Russian word endings
 * Quizzes and results are saved in a SQLite database and survive restarts
@@ -49,10 +51,10 @@ quiz-max/
 ├── frontend/
 │   ├── scripts/           translation checks and frontend tests
 │   ├── src/
-│   │   ├── components/    language switch
+│   │   ├── components/    language switch and field error message
 │   │   ├── i18n/          English and Russian texts, plural and date helpers
 │   │   ├── pages/         Home, Login, CreateQuiz, HostQuiz, JoinQuiz,
-│   │   │                  QuizRoom, Results, History
+│   │   │                  QuizRoom, Results, History, MyQuizzes
 │   │   ├── utils/         auth token helpers, API client, server address
 │   │   ├── App.jsx
 │   │   └── main.jsx
@@ -168,13 +170,14 @@ Use the **EN** and **RU** buttons at the top right of each page. They are on eve
 
 ### As a Host
 
-1. Open the app and click **Create a Quiz**
+1. Open the app and click **My Quizzes** (or **Create a Quiz** to start a new one)
 2. Register an account or log in
-3. Fill in the quiz details and add multiple choice or true or false questions
-4. Click **Start Hosting This Quiz** and share the 6 character join code
-5. Click **Start Quiz** when participants have joined
-6. Find every finished session later under **Past Results** on the home page
-7. Open a session and click **Download CSV** to get its leaderboard as a file
+3. Press **New Quiz**, fill in the quiz details and add multiple choice or true or false questions. Every change is saved automatically, and the form tells you which field is missing
+4. Find all your quizzes under **My Quizzes**. Press **Questions** to review a quiz, add more questions or remove one, and **Delete** to remove a whole quiz
+5. Press **Host** on any saved quiz and share the 6 character join code
+6. Click **Start Quiz** when participants have joined
+7. Find every finished session later under **Past Results** on the home page
+8. Open a session and click **Download CSV** to get its leaderboard as a file
 
 ### As a Participant
 
@@ -195,11 +198,12 @@ The columns are separated by semicolons and the file is UTF-8, so it opens corre
 | POST | /api/auth/register | No | Create a host account |
 | POST | /api/auth/login | No | Log in and receive a token |
 | POST | /api/quiz/create | Yes | Create a new quiz |
-| GET | /api/quiz/all | Yes | List your own quizzes |
+| GET | /api/quiz/all | Yes | List your own quizzes, newest first |
 | GET | /api/quiz/history | Yes | Past results of your quizzes |
 | GET | /api/quiz/history/:sessionId/csv | Yes | Download one finished session as CSV. Add `?lang=ru` for Russian column names |
 | GET | /api/quiz/:quizId | Yes | Get one of your quizzes |
 | POST | /api/quiz/:quizId/question | Yes | Add a question to your quiz |
+| DELETE | /api/quiz/:quizId/question/:questionId | Yes | Remove one question from your quiz |
 | DELETE | /api/quiz/:quizId | Yes | Delete your quiz |
 | GET | /health | No | Health check |
 
@@ -235,6 +239,7 @@ The host sends the login token in the socket handshake. Participants connect wit
 * [x] Docker packaging and CI
 * [x] Export results to CSV
 * [x] Russian language interface
+* [x] My Quizzes page and clear form messages
 * [ ] MAX Messenger mini app integration
 * [ ] Join by phone number through the MAX API (needs MAX developer access)
 * [ ] Question image support

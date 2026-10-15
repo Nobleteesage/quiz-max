@@ -14,13 +14,18 @@ const addQuestionSchema = z.object({
     .min(2, 'At least 2 options are required')
     .max(6, 'Maximum 6 options allowed'),
   correctAnswer: z.number().int().min(0, 'correctAnswer must be a valid index'),
+  // When true, players also see a last choice "None of the above". Its index is options.length.
+  noneOption: z.boolean().optional(),
   points: z.number().int().min(1, 'Points must be at least 1').max(1000).optional()
 }).refine(
-  (data) => data.correctAnswer < data.options.length,
+  (data) => data.correctAnswer < data.options.length + (data.noneOption ? 1 : 0),
   { message: 'correctAnswer must point to one of the provided options', path: ['correctAnswer'] }
 ).refine(
   (data) => data.type !== 'true_false' || data.options.length === 2,
   { message: 'A true or false question must have exactly 2 options', path: ['options'] }
+).refine(
+  (data) => !(data.type === 'true_false' && data.noneOption),
+  { message: 'A true or false question cannot have a none of the above option', path: ['noneOption'] }
 );
 
 module.exports = { createQuizSchema, addQuestionSchema };

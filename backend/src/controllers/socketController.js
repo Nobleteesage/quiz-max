@@ -2,6 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken');
 const { quizzes, sessions, saveResults } = require('../models/quizStore');
 const { closeWaitingSessionsOfQuiz, closeWaitingSessionsOfHost } = require('../models/sessionCleanup');
+const { isValidAnswerIndex } = require('../models/answerRules');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'change-this-in-production';
 
@@ -136,6 +137,7 @@ const handleSocketEvents = (io) => {
       const currentQ = quiz.questions[session.currentQuestion];
 
       if (participant.answers[session.currentQuestion] !== undefined) return;
+      if (!isValidAnswerIndex(currentQ, answerIndex)) return;
 
       const isCorrect = answerIndex === currentQ.correctAnswer;
       const pointsEarned = isCorrect ? currentQ.points : -quiz.penaltyPoints;
@@ -202,6 +204,7 @@ const handleSocketEvents = (io) => {
       totalQuestions: quiz.questions.length,
       text: question.text,
       options: question.options,
+      noneOption: !!question.noneOption,
       points: question.points,
       timeLimit
     });

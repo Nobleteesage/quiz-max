@@ -14,6 +14,7 @@ const emptyMultipleChoice = {
   text: '',
   options: ['', '', '', ''],
   correctAnswer: 0,
+  noneOption: false,
   points: '10'
 }
 
@@ -160,6 +161,7 @@ function CreateQuiz() {
     try {
       const payload = {
         ...questionForm,
+        noneOption: !isTrueFalse && questionForm.noneOption,
         text: questionForm.text.trim(),
         points: Number(questionForm.points),
         options: isTrueFalse
@@ -190,6 +192,13 @@ function CreateQuiz() {
         setError(serverError(t, err.response?.data?.error) || t('create.removeError'))
       }
     }
+  }
+
+  // Switching the extra choice off while it was the correct one puts the tick back on the first option
+  const toggleNoneOption = (on) => {
+    const correctAnswer = !on && questionForm.correctAnswer === questionForm.options.length ? 0 : questionForm.correctAnswer
+    setQuestionForm({ ...questionForm, noneOption: on, correctAnswer })
+    setNotice('')
   }
 
   const updateOption = (index, value) => {
@@ -394,6 +403,36 @@ function CreateQuiz() {
               )
             })}
 
+            {!isTrueFalse && (
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ddd', fontSize: '14px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={questionForm.noneOption}
+                    onChange={e => toggleNoneOption(e.target.checked)}
+                    style={{ width: '20px', height: '20px' }}
+                  />
+                  {t('create.noneOptionLabel')}
+                </label>
+                <p style={{ color: '#777', fontSize: '12px', margin: '6px 0 0 30px' }}>{t('create.noneOptionHint')}</p>
+                {questionForm.noneOption && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+                    <div style={{ flex: 1, padding: '12px 16px', background: '#0f0f1a', borderRadius: '8px', color: '#aaa', border: '1px dashed #444' }}>
+                      {t('quiz.noneOfTheAbove')}
+                    </div>
+                    <input
+                      type="radio"
+                      name="correct"
+                      checked={questionForm.correctAnswer === questionForm.options.length}
+                      onChange={() => setQuestionForm({ ...questionForm, correctAnswer: questionForm.options.length })}
+                      style={{ width: '20px', height: '20px' }}
+                    />
+                    <span style={{ color: '#aaa', fontSize: '12px' }}>{t('create.correct')}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             <label style={{ ...labelStyle, marginTop: '16px' }}>{t('create.pointsLabel')}</label>
             <input
               style={inputWithError(questionErrors.points)}
@@ -450,6 +489,18 @@ function CreateQuiz() {
                     {optionIndex === q.correctAnswer ? '✓ ' : ''}{option}
                   </p>
                 ))}
+                {q.noneOption && (
+                  <p
+                    style={{
+                      fontSize: '14px',
+                      fontStyle: 'italic',
+                      color: q.correctAnswer === q.options.length ? '#2ecc71' : '#888',
+                      fontWeight: q.correctAnswer === q.options.length ? '700' : '400'
+                    }}
+                  >
+                    {q.correctAnswer === q.options.length ? '✓ ' : ''}{t('quiz.noneOfTheAbove')}
+                  </p>
+                )}
               </div>
             ))}
 

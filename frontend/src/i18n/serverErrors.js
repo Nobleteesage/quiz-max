@@ -20,6 +20,7 @@ const KEYS = {
   'Maximum 6 options allowed': 'error.maxOptions',
   'correctAnswer must point to one of the provided options': 'error.correctRange',
   'A true or false question must have exactly 2 options': 'error.trueFalseOptions',
+  'A true or false question cannot have a none of the above option': 'error.trueFalseNone',
   'Only the quiz host can add questions': 'error.notHostAdd',
   'Only the quiz host can view this quiz': 'error.notHostView',
   'Only the quiz host can export these results': 'error.notHostExport',
